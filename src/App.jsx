@@ -187,14 +187,18 @@ export default function App() {
       const do_ = localStorage.getItem('obrafacil_orcamentos')
       const de = localStorage.getItem('obrafacil_empresa')
       
-      // FORÇA RECARREGAR SE VAZIO OU MENOR QUE 20
-      if (dp) {
-        const p = JSON.parse(dp)
-        if (Array.isArray(p) && p.length >= 20) {
-          setProdutos(p)
-          console.log('Produtos do localStorage:', p.length)
-        } else {
-          console.log('Produtos vazios ou <20, recarregando SEED', p?.length)
+      // Preserva o catálogo salvo, mesmo quando tem menos de 20 produtos.
+      // Só usa o catálogo inicial quando não existe um valor salvo válido.
+      if (dp !== null) {
+        try {
+          const p = JSON.parse(dp)
+          if (Array.isArray(p)) {
+            setProdutos(p)
+          } else {
+            setProdutos(SEED)
+            localStorage.setItem('obrafacil_produtos', JSON.stringify(SEED))
+          }
+        } catch {
           setProdutos(SEED)
           localStorage.setItem('obrafacil_produtos', JSON.stringify(SEED))
         }
