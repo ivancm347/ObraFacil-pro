@@ -76,6 +76,98 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
     mostrarNotificacao('✅ Catálogo exportado para CSV!')
   }
 
+  const importarCSV = async (evento) => {
+    const arquivo = evento.target.files?.[0]
+    evento.target.value = ''
+    if (!arquivo) return
+
+    try {
+      let texto = (await arquivo.text()).replace(/^\\uFEFF/, '')
+      const linhas = []
+      let linha = [], campo = '', aspas = false
+      for (let i = 0; i < texto.length; i++) {
+        const c = texto[i]
+        if (c === '"' && aspas && texto[i + 1] === '"') { campo += '"'; i++ }
+        else if (c === '"') aspas = !aspas
+        else if ((c === ';' || c === ',') && !aspas) {
+          if (c === ';') { linha.push(campo); campo = '' }
+          else { campo += c }
+        } else if ((c === '\\n' || c === '\\r') && !aspas) {
+          if (c === '\\r' && texto[i + 1] === '\\n') i++
+          linha.push(campo); campo = ''
+          if (linha.some(v => v.trim() !== '')) linhas.push(linha)
+          linha = []
+        } else campo += c
+      }
+      if (campo.length || linha.length) { linha.push(campo); if (linha.some(v => v.trim() !== '')) linhas.push(linha) }
+      if (linhas.length < 2) { mostrarNotificacao('⚠️ O CSV não tem linhas de produtos.'); return }
+
+      // Detecta separador mais comum no cabeçalho e divide campos sem quebrar textos entre aspas.
+      const dividir = (str, sep) => {
+        const out = []; let val = '', quoted = false
+        for (let i = 0; i < str.length; i++) {
+          const c = str[i]
+          if (c === '"' && quoted && str[i + 1] === '"') { val += '"'; i++ }
+          else if (c === '"') quoted = !quoted
+          else if (c === sep && !quoted) { out.push(val); val = '' }
+          else val += c
+        }
+        out.push(val); return out
+      }
+      const primeira = texto.split(/\\r?\\n/)[0] || ''
+      const sep = (primeira.match(/;/g) || []).length >= (primeira.match(/,/g) || []).length ? ';' : ','
+      const tabela = texto.split(/\\r?\\n/).filter(l => l.trim()).map(l => dividir(l, sep))
+      if (tabela.length < 2) { mostrarNotificacao('⚠️ O CSV não contém produtos.'); return }
+      const normalizar = v => String(v || '').replace(/^\\uFEFF/, '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]/g, '')
+      const cab = tabela[0].map(normalizar)
+      const localizar = nomes => cab.findIndex(c => nomes.includes(c))
+      const ix = {
+        codigo: localizar(['codigo', 'code', 'sku']),
+        nome: localizar(['nome', 'produto', 'nomedoproduto', 'name']),
+        categoria: localizar(['categoria', 'category']),
+        unidade: localizar(['unidade', 'un', 'unit']),
+        preco: localizar(['preco', 'precors', 'valor', 'price'])
+      }
+      if (ix.nome < 0 || ix.preco < 0) {
+        mostrarNotificacao('⚠️ Cabeçalho inválido. Use Código;Nome;Categoria;Unidade;Preço (R$).')
+        return
+      }
+      const erros = []
+      const codigosArquivo = new Set()
+      const existentes = new Set(produtos.map(p => String(p.codigo || '').trim().toLowerCase()).filter(Boolean))
+      const novos = []
+      for (let i = 1; i < tabela.length; i++) {
+        const campos = tabela[i]
+        if (campos.every(v => !String(v || '').trim())) continue
+        const nome = String(campos[ix.nome] || '').trim()
+        const codigo = ix.codigo >= 0 ? String(campos[ix.codigo] || '').trim() : ''
+        const categoria = ix.categoria >= 0 ? String(campos[ix.categoria] || '').trim() : ''
+        const unidade = ix.unidade >= 0 ? String(campos[ix.unidade] || '').trim() : ''
+        let precoTexto = String(campos[ix.preco] || '').trim().replace(/R\\$\\s?/gi, '').replace(/\\s/g, '')
+        if (precoTexto.includes(',')) precoTexto = precoTexto.replace(/\\./g, '').replace(',', '.')
+        const preco = Number(precoTexto)
+        const codigoNormal = codigo.toLowerCase()
+        if (!nome) erros.push('Linha ' + (i + 1) + ': nome vazio.')
+        else if (campos[ix.preco] == null || precoTexto === '' || !Number.isFinite(preco) || preco < 0) erros.push('Linha ' + (i + 1) + ': preço inválido.')
+        else if (codigoNormal && (existentes.has(codigoNormal) || codigosArquivo.has(codigoNormal))) erros.push('Linha ' + (i + 1) + ': código duplicado ' + codigo + '.')
+        else {
+          if (codigoNormal) codigosArquivo.add(codigoNormal)
+          novos.push({ id: 'prod-import-' + Date.now() + '-' + i, codigo: codigo || 'IMP-' + Date.now() + '-' + i, nome, categoria: categoria || 'Geral', unidade: unidade || 'un', preco })
+        }
+      }
+      if (erros.length) {
+        const resumo = erros.slice(0, 4).join(' ')
+        mostrarNotificacao('⚠️ Importação cancelada: ' + erros.length + ' erro(s). ' + resumo + (erros.length > 4 ? ' Confira o arquivo e tente novamente.' : ''))
+        return
+      }
+      if (!novos.length) { mostrarNotificacao('⚠️ Nenhum produto novo válido foi encontrado.'); return }
+      setProdutos([...novos, ...produtos])
+      mostrarNotificacao('✅ ' + novos.length + ' produto(s) importado(s)!')
+    } catch {
+      mostrarNotificacao('⚠️ Não foi possível ler esse arquivo. Salve como CSV UTF-8 e tente novamente.')
+    }
+  }
+
   const excluir = (id) => {
     if (window.confirm('Excluir este produto? Ele será removido dos orçamentos futuros.')) {
       setProdutos(produtos.filter(p => p.id !== id))
@@ -88,6 +180,11 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0 }}>📦 Produtos ({filtrados.length}/{produtos.length})</h2>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={() => document.getElementById('importar-csv-produtos')?.click()}
+            style={{ padding: '12px 16px', background: temaEscuro ? '#334155' : '#eef2f7', color: 'inherit', border: '1px solid #d0d7e2', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
+            ⬆️ Importar CSV
+          </button>
+          <input id="importar-csv-produtos" type="file" accept=".csv,text/csv" onChange={importarCSV} style={{ display: 'none' }} />
           <button onClick={exportarCSV}
             style={{ padding: '12px 16px', background: temaEscuro ? '#334155' : '#eef2f7', color: 'inherit', border: '1px solid #d0d7e2', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
             ⬇️ Exportar CSV
