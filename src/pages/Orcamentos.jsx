@@ -163,6 +163,10 @@ export default function Orcamentos({
     const licenciado = getLicenciado()
     const empresa = (()=>{ try { return JSON.parse(localStorage.getItem('obrafacil_empresa')||'{}') } catch { return {} } })()
     const dataEmpresa = licenciado ? empresa : {}
+    const cliente = clientes.find(c => c.id === orc.clienteId) || {}
+    const dataFormatada = orc.data ? new Date(`${orc.data}T12:00:00`).toLocaleDateString('pt-BR') : '—'
+    const clienteTelefone = cliente.telefone ? `Telefone/WhatsApp: ${cliente.telefone}` : ''
+    const clienteEndereco = cliente.endereco ? `Endereço: ${cliente.endereco}` : ''
 
     try {
       const win = window.open('', '_blank')
@@ -212,7 +216,16 @@ export default function Orcamentos({
           </div>
           <h2 style="margin:0 0 8px;">ORÇAMENTO Nº ${orc.numero}</h2>
           <div style="font-size:13px;color:#555;margin-bottom:16px;">
-            Cliente: <b>${orc.clienteNome}</b> • Data: ${orc.data} • Status: ${orc.status||'pendente'} • Itens: ${orc.itens.length}
+            Cliente: <b>${orc.clienteNome}</b> • Data: ${dataFormatada} • Status: ${orc.status||'pendente'} • Itens: ${orc.itens.length}
+          </div>
+          ${(clienteTelefone || clienteEndereco) ? `<div style="font-size:12px;color:#555;margin:-8px 0 16px;">${clienteTelefone}${clienteTelefone && clienteEndereco ? ' • ' : ''}${clienteEndereco}</div>` : ''}
+          <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:16px;background:#fafafa;">
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Resumo financeiro</div>
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;">
+              <span>Total: <b>${formatarMoeda(orc.total)}</b></span>
+              <span style="color:#15803d;">Adiantado: <b>${formatarMoeda(calcularAdiantamento(orc))}</b></span>
+              <span>Saldo restante: <b>${formatarMoeda(calcularSaldo(orc))}</b></span>
+            </div>
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:13px;">
             <thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">ITEM</th><th>QTD</th><th>UNID</th><th style="text-align:right;">UNIT.</th><th style="text-align:right;">SUBTOTAL</th></tr></thead>
@@ -221,7 +234,11 @@ export default function Orcamentos({
           <div class="total">TOTAL: ${formatarMoeda(orc.total)}</div>
           <div style="margin-top:8px;font-size:14px;color:#166534;font-weight:700;">VALOR ADIANTADO: ${formatarMoeda(calcularAdiantamento(orc))}</div>
           <div style="margin-top:6px;font-size:17px;color:#111;font-weight:800;">SALDO RESTANTE: ${formatarMoeda(calcularSaldo(orc))}</div>
-          ${orc.observacoes ? `<div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;"><b>Observações:</b><br/>${orc.observacoes}</div>` : ''}
+          ${orc.observacoes ? `<div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;"><b>Observações:</b><br/>${orc.observacoes}</div>` : ''}
+          <div style="display:flex;gap:32px;margin-top:52px;page-break-inside:avoid;">
+            <div style="flex:1;text-align:center;border-top:1px solid #94a3b8;padding-top:8px;font-size:11px;color:#475569;">Assinatura do cliente</div>
+            <div style="flex:1;text-align:center;border-top:1px solid #94a3b8;padding-top:8px;font-size:11px;color:#475569;">Assinatura do responsável</div>
+          </div>
           <div style="margin-top:24px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:8px;">
             Gerado por ObraFácil PRO - ${licenciado ? 'Versão Licenciada' : 'Versão Grátis - obrafacil-pro.netlify.app'} • ${new Date().toLocaleString('pt-BR')}
           </div>
