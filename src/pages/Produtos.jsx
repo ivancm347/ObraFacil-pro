@@ -102,40 +102,43 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
 
     try {
       let texto = (await arquivo.text()).replace(/^\uFEFF/, '')
-      const linhas = []
-      let linha = [], campo = '', aspas = false
-      for (let i = 0; i < texto.length; i++) {
-        const c = texto[i]
-        if (c === '"' && aspas && texto[i + 1] === '"') { campo += '"'; i++ }
-        else if (c === '"') aspas = !aspas
-        else if ((c === ';' || c === ',') && !aspas) {
-          if (c === ';') { linha.push(campo); campo = '' }
-          else { campo += c }
-        } else if ((c === '\n' || c === '\r') && !aspas) {
-          if (c === '\r' && texto[i + 1] === '\n') i++
-          linha.push(campo); campo = ''
-          if (linha.some(v => v.trim() !== '')) linhas.push(linha)
-          linha = []
-        } else campo += c
-      }
-      if (campo.length || linha.length) { linha.push(campo); if (linha.some(v => v.trim() !== '')) linhas.push(linha) }
-      if (linhas.length < 2) { mostrarNotificacao('⚠️ O CSV não tem linhas de produtos.'); return }
-
-      // Detecta separador mais comum no cabeçalho e divide campos sem quebrar textos entre aspas.
-      const dividir = (str, sep) => {
-        const out = []; let val = '', quoted = false
-        for (let i = 0; i < str.length; i++) {
-          const c = str[i]
-          if (c === '"' && quoted && str[i + 1] === '"') { val += '"'; i++ }
-          else if (c === '"') quoted = !quoted
-          else if (c === sep && !quoted) { out.push(val); val = '' }
-          else val += c
+      // Detecta o separador no cabeçalho, ignorando separadores dentro de aspas.
+      const detectarSeparador = (entrada) => {
+        let aspas = false, pontoVirgula = 0, virgula = 0
+        for (let i = 0; i < entrada.length; i++) {
+          const c = entrada[i]
+          if (c === '"' && aspas && entrada[i + 1] === '"') i++
+          else if (c === '"') aspas = !aspas
+          else if (!aspas && (c === '\n' || c === '\r')) break
+          else if (!aspas && c === ';') pontoVirgula++
+          else if (!aspas && c === ',') virgula++
         }
-        out.push(val); return out
+        return pontoVirgula >= virgula ? ';' : ','
       }
-      const primeira = texto.split(/\r?\n/)[0] || ''
-      const sep = (primeira.match(/;/g) || []).length >= (primeira.match(/,/g) || []).length ? ';' : ','
-      const tabela = texto.split(/\r?\n/).filter(l => l.trim()).map(l => dividir(l, sep))
+      const sep = detectarSeparador(texto)
+      const dividirCSV = (entrada, separador) => {
+        const linhas = []
+        let linha = [], campo = '', aspas = false
+        for (let i = 0; i < entrada.length; i++) {
+          const c = entrada[i]
+          if (c === '"' && aspas && entrada[i + 1] === '"') { campo += '"'; i++ }
+          else if (c === '"') aspas = !aspas
+          else if (c === separador && !aspas) { linha.push(campo); campo = '' }
+          else if ((c === '\n' || c === '\r') && !aspas) {
+            if (c === '\r' && entrada[i + 1] === '\n') i++
+            linha.push(campo)
+            if (linha.some(v => v.trim() !== '')) linhas.push(linha)
+            linha = []
+            campo = ''
+          } else campo += c
+        }
+        if (campo.length || linha.length) {
+          linha.push(campo)
+          if (linha.some(v => v.trim() !== '')) linhas.push(linha)
+        }
+        return linhas
+      }
+      const tabela = dividirCSV(texto, sep)
       if (tabela.length < 2) { mostrarNotificacao('⚠️ O CSV não contém produtos.'); return }
       const normalizar = v => String(v || '').replace(/^\uFEFF/, '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
       const cab = tabela[0].map(normalizar)
