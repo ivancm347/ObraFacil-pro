@@ -30,7 +30,9 @@ export default function Orcamentos({
     status: 'pendente'
   })
   const [itemProdutoId, setItemProdutoId] = useState('')
+  const [buscaProduto, setBuscaProduto] = useState('')
   const [itemQuantidade, setItemQuantidade] = useState(1)
+  const produtosFiltrados = produtos.filter(p => `${p.nome || ''} ${p.codigo || ''} ${p.categoria || ''}`.toLowerCase().includes(buscaProduto.trim().toLowerCase())).slice(0, 30)
 
   const abrirNovo = () => {
     const lic = getLicenciado()
@@ -89,6 +91,7 @@ export default function Orcamentos({
       ]
     })
     setItemProdutoId('')
+    setBuscaProduto('')
     setItemQuantidade(1)
   }
 
@@ -357,10 +360,34 @@ export default function Orcamentos({
 
             <label style={{ ...labelStyle, marginTop: '22px' }}>Adicionar Produto / Serviço</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: temaEscuro ? '#0f172a' : '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-              <select value={itemProdutoId} onChange={e => setItemProdutoId(e.target.value)} style={inputStyle()}>
-                <option value="">— Escolha o produto ou serviço —</option>
-                {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} — {formatarMoeda(p.preco)}/{p.unidade}</option>)}
-              </select>
+              <input
+                type="search"
+                value={buscaProduto}
+                onChange={e => { setBuscaProduto(e.target.value); setItemProdutoId('') }}
+                placeholder="🔎 Digite nome, código ou categoria do produto..."
+                style={inputStyle()}
+                aria-label="Buscar produto ou serviço"
+              />
+              {buscaProduto.trim() && (
+                <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #cbd5e1', borderRadius: 10, background: temaEscuro ? '#1e293b' : '#fff' }}>
+                  {produtosFiltrados.length ? produtosFiltrados.map(p => (
+                    <button
+                      type="button"
+                      key={p.id}
+                      onClick={() => { setItemProdutoId(p.id); setBuscaProduto(p.nome) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', border: 0, borderBottom: '1px solid #e2e8f0', background: itemProdutoId === p.id ? (temaEscuro ? '#334155' : '#fff7ed') : 'transparent', color: 'inherit', cursor: 'pointer' }}
+                    >
+                      <strong>{p.nome}</strong>
+                      <span style={{ display: 'block', fontSize: 12, opacity: .7 }}>{p.codigo || 'Sem código'} · {p.categoria || 'Sem categoria'} · {formatarMoeda(p.preco)}/{p.unidade}</span>
+                    </button>
+                  )) : <div style={{ padding: 12, opacity: .7 }}>Nenhum produto encontrado.</div>}
+                </div>
+              )}
+              {itemProdutoId && (
+                <div style={{ padding: '8px 10px', borderRadius: 8, background: temaEscuro ? '#1e293b' : '#ecfdf5', color: temaEscuro ? '#a7f3d0' : '#166534', fontSize: 12 }}>
+                  Selecionado: {produtos.find(p => p.id === itemProdutoId)?.nome}
+                </div>
+              )}
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1', minWidth: '90px' }}>
                   <label style={{ ...labelStyle, marginTop: 0, fontSize: '10px' }}>QTD</label>
