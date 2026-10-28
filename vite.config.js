@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  // GitHub Pages publica o projeto dentro de /Obrafacil-pro/
-  base: '/Obrafacil-pro/',
+  // GitHub Pages publica o projeto dentro de /ObraFacil-pro/
+  base: '/ObraFacil-pro/',
   plugins: [
     react(),
     VitePWA({
@@ -18,8 +18,8 @@ export default defineConfig({
         theme_color: '#F05A28',
         background_color: '#f6f7fb',
         display: 'standalone',
-        scope: '/Obrafacil-pro/',
-        start_url: '/Obrafacil-pro/',
+        scope: '/ObraFacil-pro/',
+        start_url: '/ObraFacil-pro/',
         orientation: 'portrait-primary',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
