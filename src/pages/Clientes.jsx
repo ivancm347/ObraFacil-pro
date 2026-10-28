@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 export default function Clientes({ clientes, setClientes, mostrarNotificacao, temaEscuro, cardBg, border }) {
   const [modoModal, setModoModal] = useState(null)
+  const [busca, setBusca] = useState('')
+  const clientesFiltrados = clientes.filter(c => `${c.nome || ''} ${c.telefone || ''} ${c.endereco || ''}`.toLowerCase().includes(busca.trim().toLowerCase()))
   const [form, setForm] = useState({
     id: null,
     nome: '',
@@ -51,7 +53,28 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
 
   return (
     <div>
-      <h2 style={{ marginBottom: '1.5rem' }}>👤 Clientes ({clientes.length})</h2>
+      <h2 style={{ marginBottom: '1rem' }}>👤 Clientes ({clientesFiltrados.length}{busca ? ` de ${clientes.length}` : ''})</h2>
+
+      <input
+        type="search"
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        placeholder="Buscar cliente por nome, telefone ou endereço..."
+        aria-label="Buscar clientes"
+        style={{
+          boxSizing: 'border-box',
+          width: '100%',
+          maxWidth: '520px',
+          padding: '13px 15px',
+          marginBottom: '18px',
+          border: `1.5px solid ${border || '#d0d7e2'}`,
+          borderRadius: '12px',
+          background: temaEscuro ? '#334155' : '#fff',
+          color: temaEscuro ? '#fff' : '#1e293b',
+          fontSize: '16px',
+          outlineOffset: '2px'
+        }}
+      />
 
       <button
         onClick={abrirNovo}
@@ -79,13 +102,17 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
         }}>
           Nenhum cliente cadastrado ainda
         </div>
+      ) : clientesFiltrados.length === 0 ? (
+        <div style={{ padding: '28px 20px', border: '1px dashed #cbd5e1', borderRadius: '14px', textAlign: 'center', opacity: 0.75 }}>
+          Nenhum cliente encontrado para “{busca}”.
+        </div>
       ) : (
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: '16px'
         }}>
-          {clientes.map(cliente => (
+          {clientesFiltrados.map(cliente => (
             <div
               key={cliente.id}
               style={{
