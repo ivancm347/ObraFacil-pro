@@ -9,7 +9,8 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
   const categorias = ['Todas', ...new Set(produtos.map(p => p.categoria).filter(Boolean))]
 
   const filtrados = produtos.filter(p => {
-    const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.codigo.toLowerCase().includes(busca.toLowerCase())
+    const termo = busca.trim().toLowerCase()
+    const matchBusca = String(p.nome || '').toLowerCase().includes(termo) || String(p.codigo || '').toLowerCase().includes(termo)
     const matchCat = categoriaFiltro === 'Todas' || p.categoria === categoriaFiltro
     return matchBusca && matchCat
   })
@@ -26,7 +27,12 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
 
   const salvar = () => {
     if (!form.nome.trim()) { mostrarNotificacao('⚠️ Nome é obrigatório!'); return }
-    if (!form.preco || isNaN(Number(form.preco))) { mostrarNotificacao('⚠️ Preço inválido!'); return }
+    if (form.preco === '' || !Number.isFinite(Number(form.preco)) || Number(form.preco) < 0) { mostrarNotificacao('⚠️ Informe um preço válido, igual ou maior que zero.'); return }
+
+    const codigoInformado = form.codigo.trim().toLowerCase()
+    if (codigoInformado && produtos.some(p => String(p.codigo || '').trim().toLowerCase() === codigoInformado && p.id !== form.id)) {
+      mostrarNotificacao('⚠️ Já existe um produto com esse código. Use outro código.'); return
+    }
 
     const dados = {
       id: form.id || `prod-${Date.now()}`,
@@ -102,7 +108,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
 
       {modoModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: temaEscuro ? '#1e293b' : '#fff', borderRadius: '20px', padding: '28px', maxWidth: '520px', width: '100%' }}>
+          <div style={{ background: temaEscuro ? '#1e293b' : '#fff', borderRadius: '20px', padding: '28px', maxWidth: '520px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' }}>
             <h3 style={{ marginTop: 0 }}>{modoModal === 'novo' ? '➕ Novo Produto' : '✏️ Editar Produto'}</h3>
 
             <label style={labelStyle}>Nome do produto / serviço *</label>
