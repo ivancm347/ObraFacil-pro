@@ -98,21 +98,42 @@ export default function Configuracoes({ empresa, setEmpresa, temaEscuro, mostrar
   }
 
   const importarBackup = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 10 * 1024 * 1024) {
+      mostrarNotificacao('Arquivo muito grande. O limite é 10 MB.')
+      e.target.value = ''
+      return
+    }
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
         const d = JSON.parse(ev.target.result)
-        if (Array.isArray(d.produtos)) localStorage.setItem('obrafacil_produtos', JSON.stringify(d.produtos))
-        if (Array.isArray(d.clientes)) localStorage.setItem('obrafacil_clientes', JSON.stringify(d.clientes))
-        if (Array.isArray(d.obras)) localStorage.setItem('obrafacil_obras', JSON.stringify(d.obras))
-        if (Array.isArray(d.orcamentos)) localStorage.setItem('obrafacil_orcamentos', JSON.stringify(d.orcamentos))
-        if (d.empresa) { localStorage.setItem('obrafacil_empresa', JSON.stringify(d.empresa)); setEmpresa(d.empresa); setLogoPreview(d.empresa.logo||'') }
-        if (d.licenca === 'ativo') { localStorage.setItem('obrafacil_licenca', 'ativo'); setLicenciado(true) }
-        mostrarNotificacao('Backup restaurado! Recarregando...')
-        setTimeout(()=>location.reload(), 1200)
-      } catch { mostrarNotificacao('Arquivo invalido!') }
+        const listas = ['produtos', 'clientes', 'obras', 'orcamentos']
+        const backupValido = d && typeof d === 'object' &&
+          listas.every(chave => Array.isArray(d[chave])) &&
+          d.empresa && typeof d.empresa === 'object' && !Array.isArray(d.empresa)
+        if (!backupValido) {
+          mostrarNotificacao('Backup inválido ou incompleto. Nenhum dado foi alterado.')
+          return
+        }
+        const resumo = listas.map(chave => `${chave}: ${d[chave].length}`).join(' • ')
+        if (!confirm(`Restaurar este backup? Os dados atuais serão substituídos.\n\n${resumo}\n\nRecomendamos exportar um backup atual antes de continuar.`)) return
+        localStorage.setItem('obrafacil_produtos', JSON.stringify(d.produtos))
+        localStorage.setItem('obrafacil_clientes', JSON.stringify(d.clientes))
+        localStorage.setItem('obrafacil_obras', JSON.stringify(d.obras))
+        localStorage.setItem('obrafacil_orcamentos', JSON.stringify(d.orcamentos))
+        localStorage.setItem('obrafacil_empresa', JSON.stringify(d.empresa))
+        setEmpresa(d.empresa)
+        setLogoPreview(d.empresa.logo || '')
+        // A licença é específica deste navegador e nunca deve ser ativada por um arquivo de backup.
+        mostrarNotificacao('Backup validado e restaurado. Recarregando...')
+        setTimeout(() => location.reload(), 1200)
+      } catch {
+        mostrarNotificacao('Não foi possível ler o arquivo. Use um backup JSON válido.')
+      } finally {
+        e.target.value = ''
+      }
     }
     reader.readAsText(file)
   }
