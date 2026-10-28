@@ -64,7 +64,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
       ['Código', 'Nome', 'Categoria', 'Unidade', 'Preço (R$)'].map(escapar).join(';'),
       ...produtos.map(p => colunas.map(chave => escapar(p[chave])).join(';'))
     ]
-    const arquivo = new Blob(['\\uFEFF' + linhas.join('\\r\\n')], { type: 'text/csv;charset=utf-8;' })
+    const arquivo = new Blob(['\uFEFF' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(arquivo)
     const link = document.createElement('a')
     link.href = url
@@ -76,13 +76,32 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
     mostrarNotificacao('✅ Catálogo exportado para CSV!')
   }
 
+  const baixarModeloCSV = () => {
+    const linhas = [
+      ['Código', 'Nome', 'Categoria', 'Unidade', 'Preço (R$)'],
+      ['EX-001', 'Placa Drywall ST 1,20x1,80m', 'Drywall', 'un', '28,90'],
+      ['EX-002', 'Instalação de forro', 'Serviços', 'm²', '45,00']
+    ]
+    const escapar = valor => '"' + String(valor ?? '').replace(/"/g, '""') + '"'
+    const csv = '\uFEFF' + linhas.map(l => l.map(escapar).join(';')).join('\r\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'modelo-obrafacil-produtos.csv'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    mostrarNotificacao('✅ Modelo CSV baixado. Substitua os exemplos pelos seus produtos.')
+  }
+
   const importarCSV = async (evento) => {
     const arquivo = evento.target.files?.[0]
     evento.target.value = ''
     if (!arquivo) return
 
     try {
-      let texto = (await arquivo.text()).replace(/^\\uFEFF/, '')
+      let texto = (await arquivo.text()).replace(/^\uFEFF/, '')
       const linhas = []
       let linha = [], campo = '', aspas = false
       for (let i = 0; i < texto.length; i++) {
@@ -92,8 +111,8 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
         else if ((c === ';' || c === ',') && !aspas) {
           if (c === ';') { linha.push(campo); campo = '' }
           else { campo += c }
-        } else if ((c === '\\n' || c === '\\r') && !aspas) {
-          if (c === '\\r' && texto[i + 1] === '\\n') i++
+        } else if ((c === '\n' || c === '\r') && !aspas) {
+          if (c === '\r' && texto[i + 1] === '\n') i++
           linha.push(campo); campo = ''
           if (linha.some(v => v.trim() !== '')) linhas.push(linha)
           linha = []
@@ -114,11 +133,11 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
         }
         out.push(val); return out
       }
-      const primeira = texto.split(/\\r?\\n/)[0] || ''
+      const primeira = texto.split(/\r?\n/)[0] || ''
       const sep = (primeira.match(/;/g) || []).length >= (primeira.match(/,/g) || []).length ? ';' : ','
-      const tabela = texto.split(/\\r?\\n/).filter(l => l.trim()).map(l => dividir(l, sep))
+      const tabela = texto.split(/\r?\n/).filter(l => l.trim()).map(l => dividir(l, sep))
       if (tabela.length < 2) { mostrarNotificacao('⚠️ O CSV não contém produtos.'); return }
-      const normalizar = v => String(v || '').replace(/^\\uFEFF/, '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]/g, '')
+      const normalizar = v => String(v || '').replace(/^\uFEFF/, '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
       const cab = tabela[0].map(normalizar)
       const localizar = nomes => cab.findIndex(c => nomes.includes(c))
       const ix = {
@@ -143,8 +162,8 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
         const codigo = ix.codigo >= 0 ? String(campos[ix.codigo] || '').trim() : ''
         const categoria = ix.categoria >= 0 ? String(campos[ix.categoria] || '').trim() : ''
         const unidade = ix.unidade >= 0 ? String(campos[ix.unidade] || '').trim() : ''
-        let precoTexto = String(campos[ix.preco] || '').trim().replace(/R\\$\\s?/gi, '').replace(/\\s/g, '')
-        if (precoTexto.includes(',')) precoTexto = precoTexto.replace(/\\./g, '').replace(',', '.')
+        let precoTexto = String(campos[ix.preco] || '').trim().replace(/R\$\s?/gi, '').replace(/\s/g, '')
+        if (precoTexto.includes(',')) precoTexto = precoTexto.replace(/\./g, '').replace(',', '.')
         const preco = Number(precoTexto)
         const codigoNormal = codigo.toLowerCase()
         if (!nome) erros.push('Linha ' + (i + 1) + ': nome vazio.')
@@ -180,6 +199,10 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0 }}>📦 Produtos ({filtrados.length}/{produtos.length})</h2>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={baixarModeloCSV}
+            style={{ padding: '12px 16px', background: temaEscuro ? '#334155' : '#eef2f7', color: 'inherit', border: '1px solid #d0d7e2', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
+            📄 Modelo CSV
+          </button>
           <button onClick={() => document.getElementById('importar-csv-produtos')?.click()}
             style={{ padding: '12px 16px', background: temaEscuro ? '#334155' : '#eef2f7', color: 'inherit', border: '1px solid #d0d7e2', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
             ⬆️ Importar CSV
