@@ -53,6 +53,29 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
     setModoModal(null)
   }
 
+  const exportarCSV = () => {
+    if (!produtos.length) { mostrarNotificacao('⚠️ Não há produtos para exportar.'); return }
+    const colunas = ['codigo', 'nome', 'categoria', 'unidade', 'preco']
+    const escapar = valor => {
+      const texto = String(valor ?? '')
+      return '"' + texto.replace(/"/g, '""') + '"'
+    }
+    const linhas = [
+      ['Código', 'Nome', 'Categoria', 'Unidade', 'Preço (R$)'].map(escapar).join(';'),
+      ...produtos.map(p => colunas.map(chave => escapar(p[chave])).join(';'))
+    ]
+    const arquivo = new Blob(['\\uFEFF' + linhas.join('\\r\\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(arquivo)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'obrafacil-produtos.csv'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    mostrarNotificacao('✅ Catálogo exportado para CSV!')
+  }
+
   const excluir = (id) => {
     if (window.confirm('Excluir este produto? Ele será removido dos orçamentos futuros.')) {
       setProdutos(produtos.filter(p => p.id !== id))
@@ -64,10 +87,16 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0 }}>📦 Produtos ({filtrados.length}/{produtos.length})</h2>
-        <button onClick={abrirNovo}
-          style={{ padding: '12px 24px', background: '#F05A28', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
-          ➕ Novo Produto
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={exportarCSV}
+            style={{ padding: '12px 16px', background: temaEscuro ? '#334155' : '#eef2f7', color: 'inherit', border: '1px solid #d0d7e2', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
+            ⬇️ Exportar CSV
+          </button>
+          <button onClick={abrirNovo}
+            style={{ padding: '12px 24px', background: '#F05A28', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
+            ➕ Novo Produto
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
