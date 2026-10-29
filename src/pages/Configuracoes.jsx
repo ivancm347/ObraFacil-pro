@@ -1,6 +1,8 @@
 
+import Icon from '../components/Icon.jsx'
 import { useState, useEffect } from 'react'
 import { CODIGO_ATIVACAO, CODIGO_MESTRE, LIMITE_GRATIS } from '../constants.js'
+import Icon from '../components/Icon.jsx'
 
 export default function Configuracoes({ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos }) {
   const [logoPreview, setLogoPreview] = useState(empresa.logo || '')
@@ -159,7 +161,7 @@ export default function Configuracoes({ empresa, setEmpresa, temaEscuro, mostrar
       {!licenciado ? (
         <div style={{ background: `linear-gradient(135deg, #1e293b 0%, #334155 100%)`, borderRadius: 20, padding: 24, color: '#fff', border: '2px solid #F05A28' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: '#F05A28', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🔒</div>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: '#F05A28', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}><Icon name="settings" size={24} /></div>
             <div>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Logo e Nome Bloqueados</h3>
               <p style={{ margin: '4px 0 0', fontSize: 12, opacity: 0.8 }}>Digite o código de ativação para liberar</p>
