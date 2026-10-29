@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import jsPDF from 'jspdf'
 import Icon from '../components/Icon.jsx'
-import { LIMITE_GRATIS } from '../constants.js'
 const getLicenciado = () => {
   try { return localStorage.getItem('obrafacil_licenca') === 'ativo' } catch { return false }
 }
@@ -39,11 +38,6 @@ export default function Orcamentos({
   const produtosFiltrados = produtos.filter(p => `${p.nome || ''} ${p.codigo || ''} ${p.categoria || ''}`.toLowerCase().includes(buscaProduto.trim().toLowerCase())).slice(0, 30)
 
   const abrirNovo = () => {
-    const lic = getLicenciado()
-    if (!lic && orcamentos.length >= LIMITE_GRATIS) {
-      mostrarNotificacao(`🔒 Limite de ${LIMITE_GRATIS} orçamentos atingido! Ative com código em Config para liberar ilimitado.`)
-      return
-    }
     const ultimoNum = orcamentos.length > 0
       ? Math.max(...orcamentos.map(o => parseInt(o.numero) || 0)) + 1
       : 1
@@ -207,6 +201,10 @@ export default function Orcamentos({
 
   const gerarPDF = (orc) => {
     const licenciado = getLicenciado()
+    if (!licenciado) {
+      mostrarNotificacao('🔒 Gerar PDF é um recurso PRO. Ative sua licença para liberar.')
+      return
+    }
     const empresa = (()=>{ try { return JSON.parse(localStorage.getItem('obrafacil_empresa')||'{}') } catch { return {} } })()
     const dataEmpresa = licenciado ? empresa : {}
     const cliente = clientes.find(c => c.id === orc.clienteId) || {}
@@ -314,18 +312,9 @@ export default function Orcamentos({
 
   return (
     <div>
-      {!getLicenciado() && orcamentos.length >= LIMITE_GRATIS ? (
-        <div style={{ background: '#fef2f2', border: '2px solid #ef4444', borderRadius: 16, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-          <div>
-            <div style={{ fontWeight: 800, color: '#dc2626' }}>🔒 Limite de {LIMITE_GRATIS} orçamentos atingido</div>
-            <div style={{ fontSize: 12, opacity: 0.7 }}>Versão grátis limitada a {LIMITE_GRATIS} orçamentos. Ative com código em Config para liberar ilimitado + logo no PDF.</div>
-          </div>
-          <button onClick={() => { mostrarNotificacao('Vá em Config > digite o código'); }} style={{ padding: '10px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Ativar Agora</button>
-        </div>
-      ) : !getLicenciado() && (
-        <div style={{ background: '#fffbeb', border: '1.5px solid #f59e0b', borderRadius: 12, padding: 10, marginBottom: 16, fontSize: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>📊 Versão grátis: {orcamentos.length}/{LIMITE_GRATIS} orçamentos usados</span>
-          <span style={{ fontWeight: 700, color: '#d97706' }}>{LIMITE_GRATIS - orcamentos.length} restantes • PDF sem logo</span>
+      {!getLicenciado() && (
+        <div style={{ background: '#fffbeb', border: '1.5px solid #f59e0b', borderRadius: 12, padding: 12, marginBottom: 16, fontSize: 12 }}>
+          📊 Versão grátis: orçamentos ilimitados. O recurso de gerar PDF e a personalização com logo, nome e telefone da empresa são exclusivos do PRO.
         </div>
       )}
 
@@ -363,7 +352,7 @@ export default function Orcamentos({
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <button onClick={() => abrirVer(orc)} title="Ver" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e0f2fe', cursor: 'pointer' }}><Icon name="eye" size={17} /></button>
-                <button onClick={() => gerarPDF(orc)} title={getLicenciado() ? 'PDF com logo' : 'PDF grátis (sem logo)'} style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: getLicenciado() ? '#fde68a' : '#ffedd5', cursor: 'pointer', fontWeight: 700 }}><Icon name="file" size={17} /></button>
+                <button onClick={() => gerarPDF(orc)} title={getLicenciado() ? 'Gerar PDF PRO' : '🔒 PDF exclusivo do PRO'} style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: getLicenciado() ? '#fde68a' : '#e5e7eb', cursor: 'pointer', fontWeight: 700 }}><Icon name="file" size={17} /></button>
                 <button onClick={() => compartilharWhatsApp(orc)} title="WhatsApp" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#dcfce7', cursor: 'pointer' }}><Icon name="whatsapp" size={17} /></button>
                 <button onClick={() => abrirEditar(orc)} title="Editar" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}><Icon name="edit" size={17} /></button>
                 <button onClick={() => excluir(orc.id)} title="Excluir" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}><Icon name="trash" size={17} /></button>
