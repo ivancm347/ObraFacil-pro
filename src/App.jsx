@@ -5,6 +5,7 @@ import Produtos from './pages/Produtos'
 import Clientes from './pages/Clientes'
 import Obras from './pages/Obras'
 import Configuracoes from './pages/Configuracoes'
+import Icon from './components/Icon.jsx'
 
 const SEED = [
   { id: 'prod-1', nome: 'Placa Drywall ST 12.5mm 1.20x1.80m', categoria: 'Drywall', unidade: 'un', codigo: 'COD-0001', preco: 28.9 },
