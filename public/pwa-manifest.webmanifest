@@ -1,0 +1,14 @@
+{
+  "name": "ObraFácil PRO",
+  "short_name": "ObraFácil",
+  "description": "Gestão de obras, clientes, produtos e orçamentos.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101827",
+  "theme_color": "#ea580c",
+  "icons": [
+    { "src": "./obrafacil-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
