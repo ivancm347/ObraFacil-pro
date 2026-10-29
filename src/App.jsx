@@ -241,11 +241,11 @@ export default function App() {
 
       <header style={{ height: 64, background: cardBg, borderBottom: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 13, background: 'linear-gradient(135deg, #F97316, #EA580C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 21, boxShadow: '0 5px 14px rgba(234,88,12,.25)' }}>🏗️</div>
+          <div style={{ width: 42, height: 42, borderRadius: 13, background: '#101827', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 5px 14px rgba(234,88,12,.25)' }}><img src="./obrafacil-logo.svg" alt="ObraFácil PRO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <div><div style={{ fontWeight: 800, letterSpacing: '-.5px', fontFamily: "'Sora', sans-serif" }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL <span style={{ color: '#64748b', fontSize: 11 }}>PRO</span></div><div style={{ fontSize: 10, opacity: 0.62, marginTop: 3 }}>GESTÃO DE OBRAS · {produtos.length} PRODUTOS</div></div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button aria-label={temaEscuro ? 'Ativar tema claro' : 'Ativar tema escuro'} title={temaEscuro ? 'Tema claro' : 'Tema escuro'} onClick={() => setTemaEscuro(!temaEscuro)} style={{ border: `1px solid ${border}`, width: 42, height: 42, borderRadius: 12, background: temaEscuro ? '#1e293b' : '#f8fafc', color: text, cursor: 'pointer', fontSize: 19 }}>{temaEscuro ? '☀️' : '🌙'}</button>
+          <button aria-label={temaEscuro ? 'Ativar tema claro' : 'Ativar tema escuro'} title={temaEscuro ? 'Tema claro' : 'Tema escuro'} onClick={() => setTemaEscuro(!temaEscuro)} style={{ border: `1px solid ${border}`, width: 42, height: 42, borderRadius: 12, background: temaEscuro ? '#1e293b' : '#f8fafc', color: text, cursor: 'pointer', fontSize: 19 }}>{<Icon name={temaEscuro ? 'sun' : 'moon'} size={19} />}</button>
         </div>
       </header>
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px 32px' }}>
@@ -259,15 +259,15 @@ export default function App() {
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `1px solid ${border}`, borderRadius: 16, display: 'flex', padding: 6, gap: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
         <style>{` nav::-webkit-scrollbar { display: none; } @media (max-width: 400px) { nav button { padding: 10px 12px !important; font-size: 12px !important; } } `}</style>
         {[
-          { id: 'painel', label: 'Painel', icon: '📊' },
-          { id: 'orcamentos', label: 'Orçamentos', icon: '🧾', badge: orcamentos.length },
-          { id: 'produtos', label: 'Produtos', icon: '📦', badge: produtos.length },
-          { id: 'clientes', label: 'Clientes', icon: '👥', badge: clientes.length },
-          { id: 'obras', label: 'Obras', icon: '🏗️', badge: obras.length },
-          { id: 'configuracoes', label: 'Configurações', icon: '⚙️' },
+          { id: 'painel', label: 'Painel', icon: 'dashboard' },
+          { id: 'orcamentos', label: 'Orçamentos', icon: 'receipt', badge: orcamentos.length },
+          { id: 'produtos', label: 'Produtos', icon: 'package', badge: produtos.length },
+          { id: 'clientes', label: 'Clientes', icon: 'users', badge: clientes.length },
+          { id: 'obras', label: 'Obras', icon: 'building', badge: obras.length },
+          { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
         ].map(item => {
           const ativo = pagina === item.id
-          return <button key={item.id} onClick={() => setPagina(item.id)} style={{ border: 'none', background: ativo ? '#F05A28' : 'transparent', color: ativo ? '#fff' : text, padding: '11px 14px', borderRadius: 11, cursor: 'pointer', fontWeight: ativo ? 700 : 600, fontSize: 12, flex: '0 0 auto', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, transition: 'all .18s' }}><span style={{ fontSize: 16, lineHeight: 1 }}>{item.icon}</span><span>{item.label}</span>{item.badge>0?<span style={{ fontSize: 10, opacity: .8, background: ativo ? 'rgba(255,255,255,.2)' : (temaEscuro ? '#263449' : '#eef2f7'), padding: '2px 6px', borderRadius: 20 }}>{item.badge}</span>:null}</button>
+          return <button key={item.id} onClick={() => setPagina(item.id)} style={{ border: 'none', background: ativo ? '#F05A28' : 'transparent', color: ativo ? '#fff' : text, padding: '11px 14px', borderRadius: 11, cursor: 'pointer', fontWeight: ativo ? 700 : 600, fontSize: 12, flex: '0 0 auto', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, transition: 'all .18s' }}><Icon name={item.icon} size={16} strokeWidth={2.2} /><span>{item.label}</span>{item.badge>0?<span style={{ fontSize: 10, opacity: .8, background: ativo ? 'rgba(255,255,255,.2)' : (temaEscuro ? '#263449' : '#eef2f7'), padding: '2px 6px', borderRadius: 20 }}>{item.badge}</span>:null}</button>
         })}
       </nav>
     </div>
