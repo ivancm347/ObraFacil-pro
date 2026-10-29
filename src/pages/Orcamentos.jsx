@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import jsPDF from 'jspdf'
 import Icon from '../components/Icon.jsx'
-const getLicenciado = () => {
-  try { return localStorage.getItem('obrafacil_licenca') === 'ativo' } catch { return false }
-}
-
 export default function Orcamentos({
   orcamentos,
   setOrcamentos,
@@ -14,7 +10,8 @@ export default function Orcamentos({
   formatarMoeda,
   temaEscuro,
   cardBg,
-  border
+  border,
+  licenciado = false
 }) {
   const [modoModal, setModoModal] = useState(null)
   const [orcamentoSelecionado, setOrcamentoSelecionado] = useState(null)
@@ -200,7 +197,7 @@ export default function Orcamentos({
   }
 
   const gerarPDF = (orc) => {
-    const licenciado = getLicenciado()
+    const licenciado = licenciado
     if (!licenciado) {
       mostrarNotificacao('🔒 Gerar PDF é um recurso PRO. Ative sua licença para liberar.')
       return
@@ -312,7 +309,7 @@ export default function Orcamentos({
 
   return (
     <div>
-      {!getLicenciado() && (
+      {!licenciado && (
         <div style={{ background: '#fffbeb', border: '1.5px solid #f59e0b', borderRadius: 12, padding: 12, marginBottom: 16, fontSize: 12 }}>
           📊 Versão grátis: orçamentos ilimitados. O recurso de gerar PDF e a personalização com logo, nome e telefone da empresa são exclusivos do PRO.
         </div>
@@ -352,7 +349,7 @@ export default function Orcamentos({
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <button onClick={() => abrirVer(orc)} title="Ver" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e0f2fe', cursor: 'pointer' }}><Icon name="eye" size={17} /></button>
-                <button onClick={() => gerarPDF(orc)} title={getLicenciado() ? 'Gerar PDF PRO' : '🔒 PDF exclusivo do PRO'} style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: getLicenciado() ? '#fde68a' : '#e5e7eb', cursor: 'pointer', fontWeight: 700 }}><Icon name="file" size={17} /></button>
+                <button onClick={() => gerarPDF(orc)} title={licenciado ? 'Gerar PDF PRO' : '🔒 PDF exclusivo do PRO'} style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: licenciado ? '#fde68a' : '#e5e7eb', cursor: 'pointer', fontWeight: 700 }}><Icon name="file" size={17} /></button>
                 <button onClick={() => compartilharWhatsApp(orc)} title="WhatsApp" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#dcfce7', cursor: 'pointer' }}><Icon name="whatsapp" size={17} /></button>
                 <button onClick={() => abrirEditar(orc)} title="Editar" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}><Icon name="edit" size={17} /></button>
                 <button onClick={() => excluir(orc.id)} title="Excluir" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}><Icon name="trash" size={17} /></button>
@@ -406,7 +403,7 @@ export default function Orcamentos({
               ) : <p style={{ margin: 0, color: '#16a34a', fontWeight: 700, fontSize: 13 }}>Orçamento quitado.</p>}
             </section>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-              <button onClick={() => gerarPDF(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="file" size={17} style={{ marginRight: 7 }} /> Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
+              <button onClick={() => gerarPDF(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="file" size={17} style={{ marginRight: 7 }} /> Gerar PDF {licenciado ? 'com Logo' : '(Grátis)'}</button>
               <button onClick={() => compartilharWhatsApp(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#22c55e', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="whatsapp" size={17} style={{ marginRight: 7 }} /> WhatsApp</button>
               <button onClick={() => setModoModal(null)} style={{ flex: 1, padding: '12px', border: 'none', background: '#1e293b', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>Fechar</button>
             </div>
