@@ -4,6 +4,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase.js'
 export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNotificacao }) {
   const [ofertas, setOfertas] = useState([])
   const [form, setForm] = useState({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', link: '' })
+  const [arquivoImagem, setArquivoImagem] = useState(null)
   const [mostrarForm, setMostrarForm] = useState(false)
   const [busca, setBusca] = useState('')
   const [email, setEmail] = useState('')
@@ -70,10 +71,21 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
     try { url = new URL(form.link.trim()) } catch { mostrarNotificacao('Digite um link válido começando com https://'); return }
     if (!['https:', 'http:'].includes(url.protocol)) { mostrarNotificacao('Use um endereço web válido.'); return }
     setErro('')
-    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: form.imagem.trim() || null, link_afiliado: url.href, publicada: true }
+    let imagemFinal = form.imagem.trim() || null
+    if (arquivoImagem) {
+      if (!arquivoImagem.type.startsWith('image/')) { mostrarNotificacao('Selecione um arquivo de imagem válido.'); return }
+      if (arquivoImagem.size > 5 * 1024 * 1024) { mostrarNotificacao('A imagem deve ter no máximo 5 MB.'); return }
+      const extensao = (arquivoImagem.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+      const caminho = `${crypto.randomUUID()}.${extensao}`
+      const { error: eUpload } = await supabase.storage.from('ofertas-imagens').upload(caminho, arquivoImagem, { cacheControl: '3600', upsert: false, contentType: arquivoImagem.type })
+      if (eUpload) { setErro('Não foi possível enviar a imagem. Confira se o bucket ofertas-imagens foi criado no Supabase: ' + eUpload.message); return }
+      imagemFinal = supabase.storage.from('ofertas-imagens').getPublicUrl(caminho).data.publicUrl
+    }
+    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_afiliado: url.href, publicada: true }
     const { error: eSalvar } = await supabase.from('ofertas').insert(registro)
     if (eSalvar) { setErro('Não foi possível publicar: ' + eSalvar.message); return }
     setForm({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', link: '' })
+    setArquivoImagem(null)
     setMostrarForm(false)
     mostrarNotificacao('Oferta publicada para todos os clientes!')
     await carregarOfertas()
@@ -136,8 +148,13 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
       <label style={{ fontSize: 12, fontWeight: 700 }}>Link de afiliado *
         <input required type="url" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} placeholder="https://..." style={{ ...campo, marginTop: 6 }} />
       </label>
-      <label style={{ fontSize: 12, fontWeight: 700 }}>Link da imagem (opcional)
+      <label style={{ fontSize: 12, fontWeight: 700 }}>Escolher imagem do celular (opcional)
+        <input type="file" accept="image/*" onChange={e => setArquivoImagem(e.target.files?.[0] || null)} style={{ ...campo, marginTop: 6 }} />
+        <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>Selecione uma foto da galeria. Máximo: 5 MB.</span>
+      </label>
+      <label style={{ fontSize: 12, fontWeight: 700 }}>Ou link da imagem (opcional)
         <input type="url" value={form.imagem} onChange={e => setForm({ ...form, imagem: e.target.value })} placeholder="https://.../imagem.jpg" style={{ ...campo, marginTop: 6 }} />
+        <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>Se escolher uma foto do celular, ela terá prioridade sobre este link.</span>
       </label>
       <label style={{ fontSize: 12, fontWeight: 700 }}>Descrição curta
         <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} placeholder="Benefício principal" style={{ ...campo, marginTop: 6 }} />
