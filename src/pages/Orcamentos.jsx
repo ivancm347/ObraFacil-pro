@@ -32,6 +32,9 @@ export default function Orcamentos({
   const [itemProdutoId, setItemProdutoId] = useState('')
   const [buscaProduto, setBuscaProduto] = useState('')
   const [itemQuantidade, setItemQuantidade] = useState(1)
+  const [pagamentoValor, setPagamentoValor] = useState('')
+  const [pagamentoData, setPagamentoData] = useState(new Date().toISOString().slice(0, 10))
+  const [pagamentoObs, setPagamentoObs] = useState('')
   const produtosFiltrados = produtos.filter(p => `${p.nome || ''} ${p.codigo || ''} ${p.categoria || ''}`.toLowerCase().includes(buscaProduto.trim().toLowerCase())).slice(0, 30)
 
   const abrirNovo = () => {
@@ -116,8 +119,43 @@ export default function Orcamentos({
   }
 
   const calcularTotal = (itens) => itens.reduce((s, i) => s + i.subtotal, 0)
-  const calcularAdiantamento = (orc) => Math.min(Number(orc.total) || 0, Math.max(0, Number(orc.adiantamento) || 0))
+  const calcularAdiantamento = (orc) => {
+    const entrada = Math.max(0, Number(orc.adiantamento) || 0)
+    const pagamentos = Array.isArray(orc.pagamentos) ? orc.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0
+    return Math.min(Number(orc.total) || 0, entrada + pagamentos)
+  }
   const calcularSaldo = (orc) => Math.max(0, (Number(orc.total) || 0) - calcularAdiantamento(orc))
+
+  const registrarPagamento = () => {
+    if (!orcamentoSelecionado) return
+    const valor = Number(String(pagamentoValor).replace(',', '.'))
+    if (!Number.isFinite(valor) || valor <= 0) {
+      mostrarNotificacao('Informe um valor de pagamento maior que zero.')
+      return
+    }
+    const saldo = calcularSaldo(orcamentoSelecionado)
+    if (valor > saldo + 0.00001) {
+      mostrarNotificacao(`O pagamento não pode passar do saldo de ${formatarMoeda(saldo)}.`)
+      return
+    }
+    const pagamento = {
+      id: `pag-${Date.now()}`,
+      data: pagamentoData || new Date().toISOString().slice(0, 10),
+      valor: Math.round(valor * 100) / 100,
+      observacao: pagamentoObs.trim()
+    }
+    const atualizado = {
+      ...orcamentoSelecionado,
+      pagamentos: [...(Array.isArray(orcamentoSelecionado.pagamentos) ? orcamentoSelecionado.pagamentos : []), pagamento]
+    }
+    atualizado.saldoRestante = calcularSaldo(atualizado)
+    setOrcamentos(orcamentos.map(o => o.id === atualizado.id ? atualizado : o))
+    setOrcamentoSelecionado(atualizado)
+    setPagamentoValor('')
+    setPagamentoObs('')
+    setPagamentoData(new Date().toISOString().slice(0, 10))
+    mostrarNotificacao('Pagamento registrado no histórico.')
+  }
 
   const salvar = () => {
     if (!form.numero.trim()) { mostrarNotificacao('⚠️ Número obrigatório!'); return }
@@ -344,8 +382,33 @@ export default function Orcamentos({
                 <tr><td colSpan={3} style={{ padding: '4px 8px 12px', textAlign: 'right', fontWeight: 800 }}>Saldo restante</td><td style={{ padding: '4px 8px 12px', textAlign: 'right', fontWeight: 800 }}>{formatarMoeda(calcularSaldo(orcamentoSelecionado))}</td></tr>
               </tfoot>
             </table>
+            <section style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f8fafc', border: `1px solid ${border || '#e2e8f0'}` }}>
+              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><span aria-hidden="true">▤</span> Histórico de pagamentos</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: 13, marginBottom: 12 }}>
+                <span>Total pago: <strong style={{ color: '#16a34a' }}>{formatarMoeda(calcularAdiantamento(orcamentoSelecionado))}</strong></span>
+                <span>Saldo: <strong style={{ color: '#F05A28' }}>{formatarMoeda(calcularSaldo(orcamentoSelecionado))}</strong></span>
+              </div>
+              {(Array.isArray(orcamentoSelecionado.pagamentos) && orcamentoSelecionado.pagamentos.length > 0) ? (
+                <div style={{ display: 'grid', gap: 7, marginBottom: 14 }}>
+                  {orcamentoSelecionado.pagamentos.map((p, i) => (
+                    <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, padding: '10px', borderRadius: 9, background: temaEscuro ? '#1e293b' : '#fff', border: '1px solid #e2e8f0' }}>
+                      <div><strong>{p.data ? new Date(`${p.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'}</strong>{p.observacao ? <div style={{ fontSize: 12, opacity: .7, marginTop: 3 }}>{p.observacao}</div> : null}</div>
+                      <strong style={{ color: '#16a34a', whiteSpace: 'nowrap' }}>{formatarMoeda(p.valor)}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : <p style={{ margin: '0 0 12px', fontSize: 12, opacity: .65 }}>Nenhum pagamento adicional registrado. O valor de entrada informado no orçamento já é considerado no total pago.</p>}
+              {calcularSaldo(orcamentoSelecionado) > 0.009 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, alignItems: 'end' }}>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Data do pagamento</label><input type="date" value={pagamentoData} onChange={e => setPagamentoData(e.target.value)} style={inputStyle()} /></div>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Valor recebido (R$)</label><input type="number" min="0.01" step="0.01" max={calcularSaldo(orcamentoSelecionado)} value={pagamentoValor} onChange={e => setPagamentoValor(e.target.value)} placeholder="0,00" style={inputStyle()} /></div>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Observação</label><input value={pagamentoObs} onChange={e => setPagamentoObs(e.target.value)} placeholder="Ex.: 2ª parcela" style={inputStyle()} /></div>
+                  <button onClick={registrarPagamento} style={{ padding: '12px 14px', border: 0, borderRadius: 10, background: '#16a34a', color: '#fff', fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Registrar pagamento</button>
+                </div>
+              ) : <p style={{ margin: 0, color: '#16a34a', fontWeight: 700, fontSize: 13 }}>Orçamento quitado.</p>}
+            </section>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-              <button onClick={() => gerarPDF(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>📄 Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
+              <button onClick={() => gerarPDF(orcamentoSelecionado) style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>📄 Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
               <button onClick={() => compartilharWhatsApp(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#22c55e', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>📲 WhatsApp</button>
               <button onClick={() => setModoModal(null)} style={{ flex: 1, padding: '12px', border: 'none', background: '#1e293b', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>Fechar</button>
             </div>
