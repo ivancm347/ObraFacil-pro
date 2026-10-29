@@ -8,6 +8,7 @@ import Configuracoes from './pages/Configuracoes'
 import AssistenteInteligente from './pages/AssistenteInteligente'
 import OfertasAfiliadas from './pages/OfertasAfiliadas'
 import Icon from './components/Icon.jsx'
+import { supabase, supabaseConfigured } from './lib/supabase.js'
 
 const SEED = [
   { id: 'prod-1', nome: 'Placa Drywall ST 12.5mm 1.20x1.80m', categoria: 'Drywall', unidade: 'un', codigo: 'COD-0001', preco: 28.9 },
@@ -181,48 +182,197 @@ export default function App() {
   const [orcamentos, setOrcamentos] = useState([])
   const [empresa, setEmpresa] = useState({ nome: 'ObraFacil PRO', telefone: '(13) 99999-9999', cnpj: '', pix: '', endereco: '', logo: '' })
   const [notificacao, setNotificacao] = useState(null)
-  const [inicializado, setInicializado] = useState(false)
+  const [usuario, setUsuario] = useState(null)
+  const [authPronto, setAuthPronto] = useState(!supabaseConfigured)
+  const [dadosCarregados, setDadosCarregados] = useState(!supabaseConfigured)
+  const [cloudReady, setCloudReady] = useState(false)
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [modoAuth, setModoAuth] = useState('login')
+  const [authErro, setAuthErro] = useState('')
+  const [authMensagem, setAuthMensagem] = useState('')
+
+  const lerLocal = () => {
+    const ler = (chave, padrao) => {
+      try {
+        const valor = localStorage.getItem(chave)
+        return valor === null ? padrao : JSON.parse(valor)
+      } catch {
+        return padrao
+      }
+    }
+    return {
+      produtos: ler('obrafacil_produtos', SEED),
+      clientes: ler('obrafacil_clientes', []),
+      orcamentos: ler('obrafacil_orcamentos', []),
+      obras: ler('obrafacil_obras', []),
+      empresa: ler('obrafacil_empresa', { nome: 'ObraFacil PRO', telefone: '(13) 99999-9999', cnpj: '', pix: '', endereco: '', logo: '' })
+    }
+  }
+
+  const aplicarDados = (dados) => {
+    setProdutos(Array.isArray(dados?.produtos) ? dados.produtos : SEED)
+    setClientes(Array.isArray(dados?.clientes) ? dados.clientes : [])
+    setOrcamentos(Array.isArray(dados?.orcamentos) ? dados.orcamentos : [])
+    setObras(Array.isArray(dados?.obras) ? dados.obras : [])
+    setEmpresa(dados?.empresa && typeof dados.empresa === 'object'
+      ? dados.empresa
+      : { nome: 'ObraFacil PRO', telefone: '(13) 99999-9999', cnpj: '', pix: '', endereco: '', logo: '' })
+  }
 
   useEffect(() => {
-    try {
-      const dp = localStorage.getItem('obrafacil_produtos')
-      const dc = localStorage.getItem('obrafacil_clientes')
-      const do_ = localStorage.getItem('obrafacil_orcamentos')
-      const de = localStorage.getItem('obrafacil_empresa')
-      
-      // Preserva o catálogo salvo, mesmo que tenha menos de 20 produtos ou esteja vazio.
-      if (dp !== null) {
-        const p = JSON.parse(dp)
-        if (Array.isArray(p)) {
-          setProdutos(p)
-          console.log('Produtos do localStorage:', p.length)
-        } else {
-          setProdutos(SEED)
-          localStorage.setItem('obrafacil_produtos', JSON.stringify(SEED))
-        }
-      } else {
-        setProdutos(SEED)
-        localStorage.setItem('obrafacil_produtos', JSON.stringify(SEED))
+    if (!supabaseConfigured) {
+      aplicarDados(lerLocal())
+      setDadosCarregados(true)
+      return
+    }
+
+    let ativo = true
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!ativo) return
+      if (error) setAuthErro('Não foi possível verificar a sessão. Tente atualizar a página.')
+      setUsuario(data?.session?.user ?? null)
+      setAuthPronto(true)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+      if (!ativo) return
+      setUsuario(sessao?.user ?? null)
+      setAuthPronto(true)
+      if (!sessao) {
+        setDadosCarregados(false)
+        setCloudReady(false)
       }
-      
-      if (dc) setClientes(JSON.parse(dc))
-      if (do_) setOrcamentos(JSON.parse(do_))
-      const dob = localStorage.getItem('obrafacil_obras')
-      if (dob) setObras(JSON.parse(dob))
-      if (de) setEmpresa(JSON.parse(de))
-    } catch (e) {
-      console.error('Erro localStorage', e)
-      setProdutos(SEED)
-    } finally {
-      setInicializado(true)
+    })
+
+    return () => {
+      ativo = false
+      listener?.subscription?.unsubscribe()
     }
   }, [])
 
-  useEffect(() => { if (inicializado && produtos.length > 0) localStorage.setItem('obrafacil_produtos', JSON.stringify(produtos)) }, [produtos, inicializado])
-  useEffect(() => { if (inicializado) localStorage.setItem('obrafacil_clientes', JSON.stringify(clientes)) }, [clientes, inicializado])
-  useEffect(() => { if (inicializado) localStorage.setItem('obrafacil_orcamentos', JSON.stringify(orcamentos)) }, [orcamentos, inicializado])
-  useEffect(() => { if (inicializado) localStorage.setItem('obrafacil_obras', JSON.stringify(obras)) }, [obras, inicializado])
-  useEffect(() => { if (inicializado) localStorage.setItem('obrafacil_empresa', JSON.stringify(empresa)) }, [empresa, inicializado])
+  useEffect(() => {
+    if (!supabaseConfigured || !authPronto || !usuario) return
+    let ativo = true
+    setDadosCarregados(false)
+    setCloudReady(false)
+    setAuthErro('')
+
+    const carregar = async () => {
+      const { data, error } = await supabase
+        .from('obrafacil_dados')
+        .select('payload')
+        .eq('user_id', usuario.id)
+        .maybeSingle()
+
+      if (!ativo) return
+      if (error) {
+        aplicarDados(lerLocal())
+        setAuthErro('A conta entrou, mas o banco ainda não respondeu. Confira se executou o arquivo supabase/schema.sql no Supabase. Seus dados locais foram mantidos.')
+        setDadosCarregados(true)
+        return
+      }
+
+      if (data?.payload && typeof data.payload === 'object') {
+        aplicarDados(data.payload)
+      } else {
+        const locais = lerLocal()
+        aplicarDados(locais)
+        const { error: gravacaoErro } = await supabase.from('obrafacil_dados').upsert({
+          user_id: usuario.id,
+          payload: locais,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' })
+        if (!ativo) return
+        if (gravacaoErro) {
+          setAuthErro('Não consegui copiar os dados locais para a nuvem. Confira as tabelas e políticas do Supabase; os dados deste navegador continuam preservados.')
+          setDadosCarregados(true)
+          return
+        }
+      }
+
+      if (!ativo) return
+      setCloudReady(true)
+      setDadosCarregados(true)
+    }
+
+    carregar().catch(() => {
+      if (!ativo) return
+      aplicarDados(lerLocal())
+      setAuthErro('Falha ao carregar os dados da nuvem. Os dados locais foram mantidos; confira a conexão do Supabase.')
+      setDadosCarregados(true)
+    })
+
+    return () => { ativo = false }
+  }, [usuario, authPronto])
+
+  useEffect(() => {
+    if (!dadosCarregados) return
+    try {
+      localStorage.setItem('obrafacil_produtos', JSON.stringify(produtos))
+      localStorage.setItem('obrafacil_clientes', JSON.stringify(clientes))
+      localStorage.setItem('obrafacil_orcamentos', JSON.stringify(orcamentos))
+      localStorage.setItem('obrafacil_obras', JSON.stringify(obras))
+      localStorage.setItem('obrafacil_empresa', JSON.stringify(empresa))
+    } catch (e) {
+      console.error('Não foi possível salvar os dados locais', e)
+    }
+  }, [produtos, clientes, orcamentos, obras, empresa, dadosCarregados])
+
+  useEffect(() => {
+    if (!supabaseConfigured || !usuario || !cloudReady || !dadosCarregados) return
+    const temporizador = setTimeout(async () => {
+      const payload = { produtos, clientes, orcamentos, obras, empresa }
+      const { error } = await supabase.from('obrafacil_dados').upsert({
+        user_id: usuario.id,
+        payload,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' })
+      if (error) {
+        setAuthErro('A gravação na nuvem falhou. Seus dados continuam salvos neste navegador; verifique a conexão e as políticas do Supabase.')
+      } else {
+        setAuthErro('')
+      }
+    }, 700)
+    return () => clearTimeout(temporizador)
+  }, [produtos, clientes, orcamentos, obras, empresa, usuario, cloudReady, dadosCarregados])
+
+  const entrarOuCadastrar = async (evento) => {
+    evento.preventDefault()
+    setAuthErro('')
+    setAuthMensagem('')
+    if (!email.trim() || !senha) {
+      setAuthErro('Informe seu e-mail e sua senha.')
+      return
+    }
+    if (senha.length < 6) {
+      setAuthErro('A senha precisa ter pelo menos 6 caracteres.')
+      return
+    }
+
+    const resultado = modoAuth === 'login'
+      ? await supabase.auth.signInWithPassword({ email: email.trim(), password: senha })
+      : await supabase.auth.signUp({ email: email.trim(), password: senha })
+
+    if (resultado.error) {
+      setAuthErro(resultado.error.message === 'Invalid login credentials'
+        ? 'E-mail ou senha incorretos. Confira os dados ou crie sua conta.'
+        : resultado.error.message)
+      return
+    }
+
+    if (modoAuth === 'cadastro' && !resultado.data.session) {
+      setAuthMensagem('Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre no aplicativo.')
+    } else {
+      setAuthMensagem('Acesso confirmado. Carregando seus dados...')
+    }
+  }
+
+  const sairDaConta = async () => {
+    if (!supabaseConfigured) return
+    const { error } = await supabase.auth.signOut()
+    if (error) setAuthErro('Não foi possível sair da conta. Tente novamente.')
+  }
 
   const mostrarNotificacao = (msg) => { setNotificacao(msg); setTimeout(()=>setNotificacao(null), 3000) }
   const formatarMoeda = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -230,6 +380,30 @@ export default function App() {
   const cardBg = temaEscuro ? '#151f32' : '#ffffff'
   const border = temaEscuro ? '#1e2d4a' : '#e8ecf2'
   const text = temaEscuro ? '#e2e8f0' : '#1e293b'
+
+  if (supabaseConfigured && (!authPronto || (usuario && !dadosCarregados))) {
+    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f6f7fb', color: '#172033', fontFamily: 'Inter, sans-serif', padding: 24 }}>
+      <div style={{ textAlign: 'center', maxWidth: 360 }}><div style={{ fontSize: 24, fontWeight: 800, color: '#F05A28' }}>ObraFácil PRO</div><p style={{ marginTop: 12 }}>Conectando sua conta e carregando os dados...</p></div>
+    </div>
+  }
+
+  if (supabaseConfigured && !usuario) {
+    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #111827, #263449)', padding: 20, fontFamily: 'Inter, sans-serif' }}>
+      <form onSubmit={entrarOuCadastrar} style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 22, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,.25)', color: '#172033' }}>
+        <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.7px' }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL PRO</div>
+        <h1 style={{ fontSize: 21, marginTop: 22 }}>{modoAuth === 'login' ? 'Entre na sua conta' : 'Criar conta'}</h1>
+        <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>Seus produtos, clientes, orçamentos e obras ficarão associados à sua conta e sincronizados com segurança.</p>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginTop: 20 }}>E-mail</label>
+        <input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@exemplo.com" style={{ width: '100%', padding: 13, marginTop: 7, border: '1px solid #cbd5e1', borderRadius: 10, fontSize: 16, boxSizing: 'border-box', color: '#172033', background: '#fff' }} />
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginTop: 16 }}>Senha (mínimo 6 caracteres)</label>
+        <input type="password" autoComplete={modoAuth === 'login' ? 'current-password' : 'new-password'} required minLength={6} value={senha} onChange={e => setSenha(e.target.value)} placeholder="Sua senha" style={{ width: '100%', padding: 13, marginTop: 7, border: '1px solid #cbd5e1', borderRadius: 10, fontSize: 16, boxSizing: 'border-box', color: '#172033', background: '#fff' }} />
+        {authErro && <div role="alert" style={{ marginTop: 14, background: '#fef2f2', color: '#b91c1c', padding: 11, borderRadius: 9, fontSize: 13, lineHeight: 1.45 }}>{authErro}</div>}
+        {authMensagem && <div role="status" style={{ marginTop: 14, background: '#ecfdf5', color: '#047857', padding: 11, borderRadius: 9, fontSize: 13, lineHeight: 1.45 }}>{authMensagem}</div>}
+        <button type="submit" style={{ width: '100%', marginTop: 20, padding: 14, border: 0, borderRadius: 11, background: '#F05A28', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>{modoAuth === 'login' ? 'Entrar' : 'Criar minha conta'}</button>
+        <button type="button" onClick={() => { setModoAuth(modoAuth === 'login' ? 'cadastro' : 'login'); setAuthErro(''); setAuthMensagem('') }} style={{ width: '100%', marginTop: 12, padding: 12, border: '1px solid #cbd5e1', borderRadius: 11, background: '#fff', color: '#334155', fontWeight: 700, cursor: 'pointer' }}>{modoAuth === 'login' ? 'Ainda não tenho conta — cadastrar' : 'Já tenho conta — voltar ao login'}</button>
+      </form>
+    </div>
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: "'Inter', sans-serif", paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
@@ -245,9 +419,10 @@ export default function App() {
       <header style={{ height: 64, background: cardBg, borderBottom: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 42, height: 42, borderRadius: 13, background: '#101827', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 5px 14px rgba(234,88,12,.25)' }}><img src="./obrafacil-logo.svg" alt="ObraFácil PRO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-          <div><div style={{ fontWeight: 800, letterSpacing: '-.5px', fontFamily: "'Sora', sans-serif" }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL <span style={{ color: '#64748b', fontSize: 11 }}>PRO</span></div><div style={{ fontSize: 10, opacity: 0.62, marginTop: 3 }}>GESTÃO DE OBRAS · {produtos.length} PRODUTOS</div></div>
+          <div><div style={{ fontWeight: 800, letterSpacing: '-.5px', fontFamily: "'Sora', sans-serif" }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL <span style={{ color: '#64748b', fontSize: 11 }}>PRO</span></div><div style={{ fontSize: 10, opacity: 0.62, marginTop: 3 }}>GESTÃO DE OBRAS · {produtos.length} PRODUTOS{supabaseConfigured ? (usuario && cloudReady ? ' · NUVEM' : ' · CONTA') : ' · MODO LOCAL'}</div></div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {supabaseConfigured && usuario && <button onClick={sairDaConta} title="Sair da conta" style={{ border: `1px solid ${border}`, height: 42, borderRadius: 12, padding: '0 10px', background: 'transparent', color: text, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Sair</button>}
           <button aria-label={temaEscuro ? 'Ativar tema claro' : 'Ativar tema escuro'} title={temaEscuro ? 'Tema claro' : 'Tema escuro'} onClick={() => setTemaEscuro(!temaEscuro)} style={{ border: `1px solid ${border}`, width: 42, height: 42, borderRadius: 12, background: temaEscuro ? '#1e293b' : '#f8fafc', color: text, cursor: 'pointer', fontSize: 19 }}>{<Icon name={temaEscuro ? 'sun' : 'moon'} size={19} />}</button>
         </div>
       </header>
