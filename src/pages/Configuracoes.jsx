@@ -189,8 +189,7 @@ export default function Configuracoes({ empresa, setEmpresa, temaEscuro, mostrar
       )}
 
       {/* EMPRESA */}
-      <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 20, padding: 24, opacity: licenciado ? 1 : 0.7, position: 'relative' }}>
-        {!licenciado && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(2px)', borderRadius: 20, zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ background: '#1e293b', color: '#fff', padding: '12px 20px', borderRadius: 12, fontWeight: 800, fontSize: 13 }}>🔒 BLOQUEADO - ATIVE COM CÓDIGO</div></div>}
+      <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 20, padding: 24, position: 'relative' }}>
         
         <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700 }}>Dados da Empresa</h3>
         <p style={{ fontSize: 12, opacity: 0.6, margin: '0 0 16px' }}>Esses dados aparecem no topo do PDF {licenciado ? '' : '(bloqueado)'}</p>
@@ -214,8 +213,8 @@ export default function Configuracoes({ empresa, setEmpresa, temaEscuro, mostrar
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 160 }}>
-            <label style={label}>Telefone / WhatsApp</label>
-            <input value={empresa.telefone} onChange={e=>setEmpresa({...empresa, telefone: e.target.value})} placeholder="(13) 99999-9999" style={{ ...iSt, marginBottom: 12, opacity: 1, background: temaEscuro?'#0f172a':'#fff' }} />
+            <label style={label}>Telefone / WhatsApp {licenciado ? '' : '🔒 PRO'}</label>
+            <input value={empresa.telefone} onChange={e=>licenciado && setEmpresa({...empresa, telefone: e.target.value})} disabled={!licenciado} placeholder="(13) 99999-9999" style={{ ...iSt, marginBottom: 12, opacity: licenciado ? 1 : 0.55, background: temaEscuro?'#0f172a':'#fff' }} />
           </div>
           <div style={{ flex: 1, minWidth: 160 }}>
             <label style={label}>CNPJ / CPF</label>
