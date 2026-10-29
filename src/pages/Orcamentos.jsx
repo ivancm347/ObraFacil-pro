@@ -197,7 +197,6 @@ export default function Orcamentos({
   }
 
   const gerarPDF = (orc) => {
-    const licenciado = licenciado
     if (!licenciado) {
       mostrarNotificacao('🔒 Gerar PDF é um recurso PRO. Ative sua licença para liberar.')
       return
