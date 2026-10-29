@@ -6,6 +6,7 @@ import Clientes from './pages/Clientes'
 import Obras from './pages/Obras'
 import Configuracoes from './pages/Configuracoes'
 import AssistenteInteligente from './pages/AssistenteInteligente'
+import OfertasAfiliadas from './pages/OfertasAfiliadas'
 import Icon from './components/Icon.jsx'
 
 const SEED = [
@@ -257,6 +258,7 @@ export default function App() {
         {pagina === 'clientes' && <Clientes {...{ clientes, setClientes, orcamentos, mostrarNotificacao, temaEscuro, cardBg, border } } />}
         {pagina === 'obras' && <Obras {...{ obras, setObras, clientes, orcamentos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
+        {pagina === 'ofertas' && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos } } />}
       </main>
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `1px solid ${border}`, borderRadius: 16, display: 'flex', padding: 6, gap: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
@@ -268,6 +270,7 @@ export default function App() {
           { id: 'clientes', label: 'Clientes', icon: 'users', badge: clientes.length },
           { id: 'obras', label: 'Obras', icon: 'building', badge: obras.length },
           { id: 'assistente', label: 'IA ObraFácil', icon: 'settings' },
+          { id: 'ofertas', label: 'Ofertas', icon: 'package' },
           { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
         ].map(item => {
           const ativo = pagina === item.id
