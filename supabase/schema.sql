@@ -141,3 +141,44 @@ $$;
 
 grant select, insert, update, delete on public.obrafacil_dados to authenticated;
 notify pgrst, 'reload schema';
+
+
+-- Armazenamento de imagens das ofertas. Leitura pública, envio apenas por administradores.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('ofertas-imagens', 'ofertas-imagens', true, 5242880, array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict (id) do update set public = true, file_size_limit = 5242880,
+  allowed_mime_types = array['image/jpeg','image/png','image/webp','image/gif'];
+
+drop policy if exists "Imagens de ofertas visíveis publicamente" on storage.objects;
+create policy "Imagens de ofertas visíveis publicamente" on storage.objects for select to anon, authenticated using (bucket_id = 'ofertas-imagens');
+drop policy if exists "Administradores enviam imagens de ofertas" on storage.objects;
+create policy "Administradores enviam imagens de ofertas" on storage.objects for insert to authenticated with check (bucket_id = 'ofertas-imagens' and public.obrafacil_e_admin());
+drop policy if exists "Administradores atualizam imagens de ofertas" on storage.objects;
+create policy "Administradores atualizam imagens de ofertas" on storage.objects for update to authenticated using (bucket_id = 'ofertas-imagens' and public.obrafacil_e_admin()) with check (bucket_id = 'ofertas-imagens' and public.obrafacil_e_admin());
+drop policy if exists "Administradores removem imagens de ofertas" on storage.objects;
+create policy "Administradores removem imagens de ofertas" on storage.objects for delete to authenticated using (bucket_id = 'ofertas-imagens' and public.obrafacil_e_admin());
+
+-- Licença PRO validada no servidor e vinculada à conta Supabase autenticada.
+-- A ativação é manual após confirmação do pagamento via WhatsApp.
+create table if not exists public.obrafacil_licencas (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  status text not null default 'pendente' check (status in ('pendente','ativo','cancelado')),
+  expira_em timestamptz,
+  atualizado_em timestamptz not null default now()
+);
+alter table public.obrafacil_licencas enable row level security;
+drop policy if exists "Usuário consulta a própria licença" on public.obrafacil_licencas;
+create policy "Usuário consulta a própria licença" on public.obrafacil_licencas for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "Administradores gerenciam licenças" on public.obrafacil_licencas;
+create policy "Administradores gerenciam licenças" on public.obrafacil_licencas for all to authenticated using (public.obrafacil_e_admin()) with check (public.obrafacil_e_admin());
+grant select on public.obrafacil_licencas to authenticated;
+grant insert, update, delete on public.obrafacil_licencas to authenticated;
+
+create or replace function public.obrafacil_tem_licenca()
+returns boolean language sql stable security definer set search_path = ''
+as $$
+  select exists (select 1 from public.obrafacil_licencas l where l.user_id = (select auth.uid()) and l.status = 'ativo' and (l.expira_em is null or l.expira_em > now()));
+$$;
+revoke all on function public.obrafacil_tem_licenca() from public;
+grant execute on function public.obrafacil_tem_licenca() to authenticated;
+notify pgrst, 'reload schema';
