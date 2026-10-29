@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 
-export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [] }) {
+export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta }) {
   const arquivoRef = useRef(null)
   const [form, setForm] = useState(() => ({
     nome: empresa.nome || '',
@@ -72,6 +72,27 @@ export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mo
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-.6px' }}>Configurações</h1>
         <p style={{ marginTop: 5, color: secundaria, fontSize: 14 }}>Cadastre os dados da sua empresa para aparecerem nos orçamentos.</p>
 
+        {supabaseConfigured && <div style={{ marginTop: 18, border: `1px solid ${linha}`, borderRadius: 16, background: fundo, padding: 20, boxShadow: '0 5px 18px rgba(15,23,42,.05)' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 800 }}>Conta e sincronização</h2>
+          <p style={{ color: secundaria, fontSize: 13, marginTop: 4 }}>O aplicativo abre sem senha. Entre aqui somente se quiser sincronizar seus dados com a nuvem.</p>
+          {usuario ? <>
+            <p style={{ marginTop: 14, fontSize: 14 }}>Conta conectada: <strong>{usuario.email || 'Conta conectada'}</strong></p>
+            <button type="button" onClick={sairDaConta} style={{ marginTop: 12, border: `1px solid ${linha}`, borderRadius: 10, background: 'transparent', color: cor, padding: '11px 15px', fontWeight: 700, cursor: 'pointer' }}>Desconectar conta</button>
+          </> : <form onSubmit={entrarOuCadastrar} style={{ marginTop: 14 }}>
+            <label style={label}>E-mail
+              <input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@exemplo.com" style={campo} />
+            </label>
+            <label style={{ ...label, marginTop: 12 }}>Senha (mínimo 6 caracteres)
+              <input type="password" autoComplete={modoAuth === 'login' ? 'current-password' : 'new-password'} required minLength={6} value={senha} onChange={e => setSenha(e.target.value)} placeholder="Sua senha" style={campo} />
+            </label>
+            {authErro && <div role="alert" style={{ marginTop: 12, background: '#fef2f2', color: '#b91c1c', padding: 11, borderRadius: 9, fontSize: 13 }}>{authErro}</div>}
+            {authMensagem && <div role="status" style={{ marginTop: 12, background: '#ecfdf5', color: '#047857', padding: 11, borderRadius: 9, fontSize: 13 }}>{authMensagem}</div>}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+              <button type="submit" style={{ border: 0, borderRadius: 10, background: '#F05A28', color: '#fff', padding: '11px 15px', fontWeight: 800, cursor: 'pointer' }}>{modoAuth === 'login' ? 'Entrar e sincronizar' : 'Criar conta'}</button>
+              <button type="button" onClick={() => { setModoAuth(modoAuth === 'login' ? 'cadastro' : 'login'); setAuthErro(''); }} style={{ border: `1px solid ${linha}`, borderRadius: 10, background: 'transparent', color: cor, padding: '11px 15px', fontWeight: 700, cursor: 'pointer' }}>{modoAuth === 'login' ? 'Criar conta' : 'Já tenho conta'}</button>
+            </div>
+          </form>}
+        </div>}
         <form onSubmit={salvar}>
           <div style={{ marginTop: 22, border: `1px solid ${linha}`, borderRadius: 16, background: fundo, padding: 20, boxShadow: '0 5px 18px rgba(15,23,42,.05)' }}>
             <h2 style={{ fontSize: 18, fontWeight: 800 }}>Dados da empresa</h2>
