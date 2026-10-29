@@ -350,21 +350,25 @@ export default function App() {
       return
     }
 
-    const resultado = modoAuth === 'login'
-      ? await supabase.auth.signInWithPassword({ email: email.trim(), password: senha })
-      : await supabase.auth.signUp({ email: email.trim(), password: senha })
+    try {
+      const resultado = modoAuth === 'login'
+        ? await supabase.auth.signInWithPassword({ email: email.trim(), password: senha })
+        : await supabase.auth.signUp({ email: email.trim(), password: senha })
 
-    if (resultado.error) {
-      setAuthErro(resultado.error.message === 'Invalid login credentials'
-        ? 'E-mail ou senha incorretos. Confira os dados ou crie sua conta.'
-        : resultado.error.message)
-      return
-    }
+      if (resultado.error) {
+        setAuthErro(resultado.error.message === 'Invalid login credentials'
+          ? 'E-mail ou senha incorretos. Confira os dados ou crie sua conta.'
+          : resultado.error.message)
+        return
+      }
 
-    if (modoAuth === 'cadastro' && !resultado.data.session) {
-      setAuthMensagem('Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre no aplicativo.')
-    } else {
-      setAuthMensagem('Acesso confirmado. Carregando seus dados...')
+      if (modoAuth === 'cadastro' && !resultado.data.session) {
+        setAuthMensagem('Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre no aplicativo.')
+      } else {
+        setAuthMensagem('Acesso confirmado. Carregando seus dados...')
+      }
+    } catch {
+      setAuthErro('Não foi possível conectar ao Supabase. Verifique a internet e tente novamente.')
     }
   }
 
