@@ -1,10 +1,22 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Icon from '../components/Icon.jsx'
+import { supabase, supabaseConfigured } from '../lib/supabase.js'
 
 const money = (n, formatarMoeda) => formatarMoeda ? formatarMoeda(Number(n) || 0) : (Number(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const cardStyle = (dark, border) => ({ background: dark ? '#172235' : '#fff', border: `1px solid ${border || (dark ? '#2b3a50' : '#e6eaf0')}`, borderRadius: 18, boxShadow: dark ? 'none' : '0 5px 20px rgba(20,35,60,.045)' })
 
 export default function Painel({ produtos = [], clientes = [], orcamentos = [], obras = [], formatarMoeda, temaEscuro, cardBg, border, setPagina }) {
+  const [ofertaDestaque, setOfertaDestaque] = useState(null)
+  useEffect(() => {
+    let ativo = true
+    const carregar = async () => {
+      if (!supabaseConfigured) return
+      const { data } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,created_at').order('created_at', { ascending: false }).limit(1)
+      if (ativo) setOfertaDestaque(data?.[0] || null)
+    }
+    carregar()
+    return () => { ativo = false }
+  }, [])
   const dark = !!temaEscuro
   const text = dark ? '#e7edf7' : '#172033'
   const muted = dark ? '#9aa9bd' : '#778398'
@@ -54,6 +66,26 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         <p style={{ margin: '0 0 22px', fontSize: 14, lineHeight: 1.7, color: '#d2dbea', maxWidth: 480 }}>Acompanhe seus orçamentos, clientes, produtos e obras em um só lugar.</p>
         <button onClick={() => btn('orcamentos')} className="of-action" style={{ border: 0, borderRadius: 11, padding: '12px 17px', background: '#f05a28', color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, boxShadow: '0 6px 18px rgba(240,90,40,.25)' }}>＋ Criar orçamento <span style={{ fontSize: 18 }}>↗</span></button>
       </div>
+    </section>
+
+    {ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
+      <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px' }}>🛍️ OFERTA EM DESTAQUE</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, padding: 16, alignItems: 'center' }}>
+        <div style={{ height: 180, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
+          {ofertaDestaque.link_imagem ? <img src={ofertaDestaque.link_imagem} alt={ofertaDestaque.nome || 'Produto em oferta'} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 48 }}>🧰</span>}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{ofertaDestaque.categoria || 'Oferta especial'}</span>
+          <h2 style={{ margin: '7px 0', fontSize: 20, lineHeight: 1.25, fontWeight: 900 }}>{ofertaDestaque.nome}</h2>
+          {ofertaDestaque.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 12, lineHeight: 1.5 }}>{ofertaDestaque.descricao_curta}</p>}
+          {ofertaDestaque.preco !== null && ofertaDestaque.preco !== '' && <div style={{ fontSize: 23, fontWeight: 900, margin: '8px 0 12px' }}>{money(ofertaDestaque.preco, formatarMoeda)}</div>}
+          <a href={ofertaDestaque.link_afiliado || '#'} target="_blank" rel="sponsored nofollow noopener noreferrer" onClick={e => { if (!ofertaDestaque.link_afiliado) e.preventDefault() }} style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 10, padding: '12px 17px', fontWeight: 900, fontSize: 13 }}>VER OFERTA ↗</a>
+        </div>
+      </div>
+    </section>}
+    <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
+      <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver anúncios de ofertas?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Assine o PRO por <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
+      <button type="button" onClick={() => window.alert('A assinatura ainda precisa de um checkout de pagamento e validação automática para liberar a remoção dos anúncios.')} style={{ border: 0, borderRadius: 11, padding: '12px 16px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>🔓 QUERO O PRO</button>
     </section>
 
     <div className="of-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 14, marginBottom: 25 }}>
