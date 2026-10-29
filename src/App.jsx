@@ -232,7 +232,13 @@ export default function App() {
     supabase.auth.getSession().then(({ data, error }) => {
       if (!ativo) return
       if (error) setAuthErro('Não foi possível verificar a sessão. Tente atualizar a página.')
-      setUsuario(data?.session?.user ?? null)
+      const sessaoUsuario = data?.session?.user ?? null
+      setUsuario(sessaoUsuario)
+      if (!sessaoUsuario) {
+        aplicarDados(lerLocal())
+        setDadosCarregados(true)
+        setCloudReady(false)
+      }
       setAuthPronto(true)
     })
 
@@ -241,7 +247,8 @@ export default function App() {
       setUsuario(sessao?.user ?? null)
       setAuthPronto(true)
       if (!sessao) {
-        setDadosCarregados(false)
+        aplicarDados(lerLocal())
+        setDadosCarregados(true)
         setCloudReady(false)
       }
     })
@@ -403,24 +410,6 @@ export default function App() {
     </div>
   }
 
-  if (supabaseConfigured && !usuario) {
-    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #111827, #263449)', padding: 20, fontFamily: 'Inter, sans-serif' }}>
-      <form onSubmit={entrarOuCadastrar} style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 22, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,.25)', color: '#172033' }}>
-        <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.7px' }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL PRO</div>
-        <h1 style={{ fontSize: 21, marginTop: 22 }}>{modoAuth === 'login' ? 'Entre na sua conta' : 'Criar conta'}</h1>
-        <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>Seus produtos, clientes, orçamentos e obras ficarão associados à sua conta e sincronizados com segurança.</p>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginTop: 20 }}>E-mail</label>
-        <input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@exemplo.com" style={{ width: '100%', padding: 13, marginTop: 7, border: '1px solid #cbd5e1', borderRadius: 10, fontSize: 16, boxSizing: 'border-box', color: '#172033', background: '#fff' }} />
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginTop: 16 }}>Senha (mínimo 6 caracteres)</label>
-        <input type="password" autoComplete={modoAuth === 'login' ? 'current-password' : 'new-password'} required minLength={6} value={senha} onChange={e => setSenha(e.target.value)} placeholder="Sua senha" style={{ width: '100%', padding: 13, marginTop: 7, border: '1px solid #cbd5e1', borderRadius: 10, fontSize: 16, boxSizing: 'border-box', color: '#172033', background: '#fff' }} />
-        {authErro && <div role="alert" style={{ marginTop: 14, background: '#fef2f2', color: '#b91c1c', padding: 11, borderRadius: 9, fontSize: 13, lineHeight: 1.45 }}>{authErro}</div>}
-        {authMensagem && <div role="status" style={{ marginTop: 14, background: '#ecfdf5', color: '#047857', padding: 11, borderRadius: 9, fontSize: 13, lineHeight: 1.45 }}>{authMensagem}</div>}
-        <button type="submit" style={{ width: '100%', marginTop: 20, padding: 14, border: 0, borderRadius: 11, background: '#F05A28', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>{modoAuth === 'login' ? 'Entrar' : 'Criar minha conta'}</button>
-        <button type="button" onClick={() => { setModoAuth(modoAuth === 'login' ? 'cadastro' : 'login'); setAuthErro(''); setAuthMensagem('') }} style={{ width: '100%', marginTop: 12, padding: 12, border: '1px solid #cbd5e1', borderRadius: 11, background: '#fff', color: '#334155', fontWeight: 700, cursor: 'pointer' }}>{modoAuth === 'login' ? 'Ainda não tenho conta — cadastrar' : 'Já tenho conta — voltar ao login'}</button>
-      </form>
-    </div>
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: "'Inter', sans-serif", paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       {notificacao && <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#0e9f6e', color: '#fff', padding: '12px 20px', borderRadius: 12, fontWeight: 700, zIndex: 9999 }}>{notificacao}</div>}
@@ -439,7 +428,6 @@ export default function App() {
           <div><div style={{ fontWeight: 800, letterSpacing: '-.5px', fontFamily: "'Sora', sans-serif" }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL <span style={{ color: '#64748b', fontSize: 11 }}>PRO</span></div><div style={{ fontSize: 10, opacity: 0.62, marginTop: 3 }}>GESTÃO DE OBRAS · {produtos.length} PRODUTOS{supabaseConfigured ? (usuario && cloudReady ? ' · NUVEM' : ' · CONTA') : ' · MODO LOCAL'}</div></div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {supabaseConfigured && usuario && <button onClick={sairDaConta} title="Sair da conta" style={{ border: `1px solid ${border}`, height: 42, borderRadius: 12, padding: '0 10px', background: 'transparent', color: text, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Sair</button>}
           <button aria-label={temaEscuro ? 'Ativar tema claro' : 'Ativar tema escuro'} title={temaEscuro ? 'Tema claro' : 'Tema escuro'} onClick={() => setTemaEscuro(!temaEscuro)} style={{ border: `1px solid ${border}`, width: 42, height: 42, borderRadius: 12, background: temaEscuro ? '#1e293b' : '#f8fafc', color: text, cursor: 'pointer', fontSize: 19 }}>{<Icon name={temaEscuro ? 'sun' : 'moon'} size={19} />}</button>
         </div>
       </header>
@@ -451,7 +439,7 @@ export default function App() {
         {pagina === 'obras' && <Obras {...{ obras, setObras, clientes, orcamentos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
         {pagina === 'ofertas' && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
-        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos } } />}
+        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta } } />}
       </main>
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `1px solid ${border}`, borderRadius: 16, display: 'flex', padding: 6, gap: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
         <style>{` nav::-webkit-scrollbar { display: none; } @media (max-width: 400px) { nav button { padding: 10px 12px !important; font-size: 12px !important; } } `}</style>
