@@ -4,7 +4,12 @@ import Icon from '../components/Icon.jsx'
 export default function Clientes({ clientes, setClientes, mostrarNotificacao, temaEscuro, cardBg, border }) {
   const [modoModal, setModoModal] = useState(null)
   const [busca, setBusca] = useState('')
-  const clientesFiltrados = clientes.filter(c => `${c.nome || ''} ${c.telefone || ''} ${c.endereco || ''}`.toLowerCase().includes(busca.trim().toLowerCase()))
+  const normalizarBusca = valor => String(valor || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim()
+  const clientesFiltrados = clientes.filter(c => {
+    const termo = normalizarBusca(busca)
+    const campos = [c.nome, c.telefone, c.endereco, c.email].map(normalizarBusca)
+    return !termo || campos.some(campo => campo.includes(termo))
+  })
   const [form, setForm] = useState({
     id: null,
     nome: '',
@@ -134,7 +139,19 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
                   📍 {cliente.endereco}
                 </p>
               )}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                {cliente.telefone && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const numero = String(cliente.telefone).replace(/\\D/g, '')
+                      if (numero.length < 10) { mostrarNotificacao('Confira o telefone cadastrado antes de abrir o WhatsApp.'); return }
+                      const numeroBR = numero.startsWith('55') ? numero : '55' + numero
+                      window.open('https://wa.me/' + numeroBR, '_blank', 'noopener,noreferrer')
+                    }}
+                    style={{ flex: '1 1 100%', padding: '9px', border: 'none', borderRadius: '8px', background: '#dcfce7', color: '#166534', cursor: 'pointer', fontWeight: 700 }}
+                  >WhatsApp ↗</button>
+                )}
                 <button
                   onClick={() => abrirEditar(cliente)}
                   style={{
