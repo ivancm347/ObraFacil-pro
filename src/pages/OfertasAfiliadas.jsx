@@ -18,9 +18,9 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
 
   const carregarOfertas = async () => {
     if (!supabaseConfigured) { setCarregando(false); return }
-    const { data, error: e } = await supabase.from('ofertas').select('*').order('criada_em', { ascending: false })
+    const { data, error: e } = await supabase.from('ofertas').select('*').order('created_at', { ascending: false })
     if (e) setErro('Não foi possível carregar as ofertas: ' + e.message)
-    else setOfertas((data || []).map(o => ({ ...o, id: o.id, nome: o.nome, descricao: o.descricao || '', preco: o.preco ?? '', categoria: o.categoria || 'Outros', imagem: o.imagem || '', link: o.link })))
+    else setOfertas((data || []).map(o => ({ ...o, id: o.id, nome: o.nome, descricao: o.descricao_curta || '', preco: o.preco ?? '', categoria: o.categoria || 'Outros', imagem: o.link_imagem || '', link: o.link_afiliado || '' })))
     setCarregando(false)
   }
 
@@ -70,7 +70,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
     try { url = new URL(form.link.trim()) } catch { mostrarNotificacao('Digite um link válido começando com https://'); return }
     if (!['https:', 'http:'].includes(url.protocol)) { mostrarNotificacao('Use um endereço web válido.'); return }
     setErro('')
-    const registro = { nome: form.nome.trim(), descricao: form.descricao.trim(), preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, imagem: form.imagem.trim(), link: url.href, publicada: true }
+    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: form.imagem.trim() || null, link_afiliado: url.href, publicada: true }
     const { error: eSalvar } = await supabase.from('ofertas').insert(registro)
     if (eSalvar) { setErro('Não foi possível publicar: ' + eSalvar.message); return }
     setForm({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', link: '' })
