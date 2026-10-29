@@ -12,7 +12,17 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const totalOrcamentos = orcamentos.reduce((s, o) => s + Number(o.total || (o.itens || []).reduce((a, i) => a + Number(i.subtotal || Number(i.quantidade || 0) * Number(i.preco || 0)), 0)), 0)
   const pendentes = orcamentos.filter(o => ['pendente', 'em análise', 'em analise'].includes(String(o.status || 'pendente').toLowerCase()))
   const aprovados = orcamentos.filter(o => String(o.status || '').toLowerCase().includes('aprov'))
-  const valorPendente = pendentes.reduce((s, o) => s + Number(o.total || (o.itens || []).reduce((a, i) => a + Number(i.subtotal || Number(i.quantidade || 0) * Number(i.preco || 0)), 0)), 0)
+  const totalDoOrcamento = (o) => Math.max(0, Number(o.total || (o.itens || []).reduce((a, i) => a + Number(i.subtotal || Number(i.quantidade || 0) * Number(i.preco || 0)), 0)) || 0)
+  const totalPago = (o) => Math.min(totalDoOrcamento(o), Math.max(0, Number(o.adiantamento) || 0) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0))
+  const saldoAReceber = orcamentos.reduce((s, o) => s + Math.max(0, totalDoOrcamento(o) - totalPago(o)), 0)
+  const totalRecebido = orcamentos.reduce((s, o) => s + totalPago(o), 0)
+  const mesAtual = new Date().toISOString().slice(0, 7)
+  const recebidoNoMes = orcamentos.reduce((s, o) => {
+    const entradaInicial = String(o.data || '').startsWith(mesAtual) ? Math.max(0, Number(o.adiantamento) || 0) : 0
+    const parcelasMes = Array.isArray(o.pagamentos) ? o.pagamentos.filter(p => String(p.data || '').startsWith(mesAtual)).reduce((v, p) => v + Math.max(0, Number(p.valor) || 0), 0) : 0
+    return s + entradaInicial + parcelasMes
+  }, 0)
+  const orcamentosComSaldo = orcamentos.filter(o => totalDoOrcamento(o) - totalPago(o) > 0.009).length
   const shortcuts = [
     { id: 'orcamentos', icon: 'receipt', title: 'Novo orçamento', desc: 'Monte uma proposta', color: '#f05a28' },
     { id: 'obras', icon: 'building', title: 'Gerenciar obras', desc: 'Acompanhe serviços', color: '#2563eb' },
@@ -22,7 +32,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const stats = [
     { label: 'Orçamentos cadastrados', value: orcamentos.length, icon: 'receipt', tint: '#fff0e9', ink: '#e85b25', note: `${aprovados.length} aprovados` },
     { label: 'Valor em propostas', value: money(totalOrcamentos, formatarMoeda), icon: 'wallet', tint: '#e8f8ef', ink: '#16834a', note: 'Soma dos orçamentos' },
-    { label: 'Aguardando retorno', value: pendentes.length, icon: 'receipt', tint: '#fff5d9', ink: '#a66a00', note: `${money(valorPendente, formatarMoeda)} em aberto` },
+    { label: 'Saldo a receber', value: money(saldoAReceber, formatarMoeda), icon: 'wallet', tint: '#fff5d9', ink: '#a66a00', note: `${orcamentosComSaldo} orçamentos com saldo` },
     { label: 'Obras cadastradas', value: obras.length, icon: 'building', tint: '#eaf1ff', ink: '#2b60c5', note: `${clientes.length} clientes` },
   ]
   const btn = (id) => setPagina && setPagina(id)
@@ -46,6 +56,30 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         <div style={{ color: muted, fontSize: 11 }}>{s.note}</div>
       </div>)}
     </div>
+
+    <section style={{ ...panel, padding: 22, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+        <div><h2 style={{ fontSize: 17, fontWeight: 800, margin: 0 }}>Financeiro</h2><p style={{ color: muted, fontSize: 12, margin: '5px 0 0' }}>Resumo calculado a partir dos adiantamentos e pagamentos registrados</p></div>
+        <button onClick={() => btn('orcamentos')} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: dark ? '#27364b' : '#fff2ec', color: '#e85b25', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>Ver orçamentos →</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(175px,1fr))', gap: 12 }}>
+        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="check" size={16} /> Total recebido</div>
+          <div style={{ fontSize: 23, fontWeight: 800, color: '#16a34a', overflowWrap: 'anywhere' }}>{money(totalRecebido, formatarMoeda)}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Todos os orçamentos</div>
+        </div>
+        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#fff8eb', border: `1px solid ${dark ? '#554328' : '#f6e6c6'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="wallet" size={16} /> A receber</div>
+          <div style={{ fontSize: 23, fontWeight: 800, color: '#d97706', overflowWrap: 'anywhere' }}>{money(saldoAReceber, formatarMoeda)}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>{orcamentosComSaldo} orçamento(s) com saldo pendente</div>
+        </div>
+        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#eef5ff', border: `1px solid ${dark ? '#2d4263' : '#dbe8ff'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Recebido neste mês</div>
+          <div style={{ fontSize: 23, fontWeight: 800, color: '#2563eb', overflowWrap: 'anywhere' }}>{money(recebidoNoMes, formatarMoeda)}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Com base nas datas registradas</div>
+        </div>
+      </div>
+    </section>
 
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.35fr) minmax(260px,.85fr)', gap: 18, marginBottom: 20 }} className="of-main-grid">
       <section style={{ ...panel, padding: 22 }}>
