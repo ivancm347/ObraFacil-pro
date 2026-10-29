@@ -1,5 +1,4 @@
 
-import Icon from '../components/Icon.jsx'
 import { useState, useEffect } from 'react'
 import { CODIGO_ATIVACAO, CODIGO_MESTRE, LIMITE_GRATIS } from '../constants.js'
 import Icon from '../components/Icon.jsx'
