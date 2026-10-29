@@ -108,3 +108,36 @@ with check (public.obrafacil_e_admin());
 grant select on public.ofertas to anon, authenticated;
 grant insert, update, delete on public.ofertas to authenticated;
 notify pgrst, 'reload schema';
+
+
+-- OBRAFACIL PRO - dados comerciais por usuário, protegidos por RLS
+-- Os dados comerciais ficam isolados por usuário autenticado.
+-- Esta tabela nova não altera nem apaga as tabelas existentes.
+create table if not exists public.obrafacil_dados (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  payload jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.obrafacil_dados enable row level security;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'obrafacil_dados'
+      and policyname = 'Usuário acessa apenas seus dados comerciais'
+  ) then
+    create policy "Usuário acessa apenas seus dados comerciais"
+      on public.obrafacil_dados
+      for all
+      to authenticated
+      using (auth.uid() = user_id)
+      with check (auth.uid() = user_id);
+  end if;
+end
+$$;
+
+grant select, insert, update, delete on public.obrafacil_dados to authenticated;
+notify pgrst, 'reload schema';
