@@ -32,6 +32,8 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     planejadas: obras.filter(o => o.status === 'Planejada').length,
     concluidas: obras.filter(o => o.status === 'Concluída').length,
     valor: obras.reduce((s, o) => s + Number(o.valor || 0), 0),
+    custo: obras.reduce((s, o) => s + Number(o.custo || 0), 0),
+    resultado: obras.reduce((s, o) => s + Number(o.valor || 0) - Number(o.custo || 0), 0),
   }), [obras])
 
   const visiveis = useMemo(() => {
@@ -100,6 +102,20 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
         <button onClick={abrirNova} style={{ padding: '12px 16px', border: 0, borderRadius: 11, background: '#f05a28', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>＋ Nova obra</button>
       </section>
 
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: 12, margin: '16px 0' }}>
+        {[
+          { label: 'Valor contratado', valor: totais.valor, cor: '#2563eb' },
+          { label: 'Custo estimado', valor: totais.custo, cor: '#d97706' },
+          { label: 'Resultado previsto', valor: totais.resultado, cor: totais.resultado >= 0 ? '#16a34a' : '#dc2626' },
+        ].map(k => (
+          <div key={k.label} style={{ background: cardBg || '#fff', border: `1px solid ${borda}`, borderRadius: 15, padding: 15 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: muted, textTransform: 'uppercase', letterSpacing: '.4px' }}>{k.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 850, color: k.cor, marginTop: 7 }}>{moeda(k.valor)}</div>
+            <div style={{ fontSize: 10, color: muted, marginTop: 4 }}>Somatório de todas as obras</div>
+          </div>
+        ))}
+      </section>
+
       <section style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '16px 0' }}>
         <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar obra, cliente, orçamento..." style={{ ...inputStyle, flex: '1 1 250px' }} />
         <select value={filtro} onChange={e => setFiltro(e.target.value)} style={{ ...inputStyle, flex: '0 1 190px' }}>{['Todas', 'Planejada', 'Em andamento', 'Pausada', 'Concluída'].map(s => <option key={s}>{s}</option>)}</select>
@@ -117,8 +133,8 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
               </div>
               <div style={{ marginTop: 12, fontSize: 12, color: muted }}>📍 {obra.endereco || 'Sem endereço'} • 📅 {obra.inicio || '—'} → {obra.previsao || '—'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 14, padding: 12, borderRadius: 12, background: temaEscuro ? '#111827' : '#f8fafc' }}>
-                <div><div style={{ fontSize: 10, color: muted }}>VALOR</div><strong>{moeda(obra.valor)}</strong></div>
-                <div><div style={{ fontSize: 10, color: muted }}>SALDO</div><strong style={{ color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong></div>
+                <div><div style={{ fontSize: 10, color: muted }}>VALOR CONTRATADO</div><strong>{moeda(obra.valor)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Custo: {moeda(obra.custo)}</div></div>
+                <div><div style={{ fontSize: 10, color: muted }}>RESULTADO PREVISTO</div><strong style={{ color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Valor menos custo estimado</div></div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 <button onClick={() => abrirEdicao(obra)} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: temaEscuro ? '#263244' : '#e9eef5', fontWeight: 700, cursor: 'pointer' }}>✎ Editar</button>
