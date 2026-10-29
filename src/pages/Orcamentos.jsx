@@ -213,8 +213,8 @@ export default function Orcamentos({
       if (!win) { alert('Permita pop-up para gerar PDF'); return }
 
       const logoHtml = licenciado && dataEmpresa.logo
-        ? `<img src="${dataEmpresa.logo}" style="height:110px; max-width:250px; width:auto; object-fit:contain;" />`
-        : `<img src="${new URL('./obrafacil-logo.svg', window.location.href).href}" style="height:96px;width:96px;object-fit:contain;border-radius:12px;" alt="ObraFácil PRO" />`
+        ? `<img src="${dataEmpresa.logo}" style="height:150px; max-width:350px; width:auto; object-fit:contain;" />`
+        : `<img src="${new URL('./obrafacil-logo.svg', window.location.href).href}" style="height:130px;width:130px;object-fit:contain;border-radius:12px;" alt="ObraFácil PRO" />`
 
       const empresaNome = licenciado && dataEmpresa.nome ? dataEmpresa.nome : 'ObraFácil PRO'
       const empresaTel = licenciado && dataEmpresa.telefone ? `Tel: ${dataEmpresa.telefone}` : 'Gestão de Orçamentos'
