@@ -183,6 +183,7 @@ export default function App() {
   const [empresa, setEmpresa] = useState({ nome: 'ObraFacil PRO', telefone: '(13) 99999-9999', cnpj: '', pix: '', endereco: '', logo: '' })
   const [notificacao, setNotificacao] = useState(null)
   const [usuario, setUsuario] = useState(null)
+  const [licenciado, setLicenciado] = useState(false)
   const [authPronto, setAuthPronto] = useState(!supabaseConfigured)
   const [dadosCarregados, setDadosCarregados] = useState(false)
   const [cloudReady, setCloudReady] = useState(false)
@@ -250,6 +251,17 @@ export default function App() {
       listener?.subscription?.unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    let ativo = true
+    const verificarLicenca = async () => {
+      if (!supabaseConfigured || !usuario) { if (ativo) setLicenciado(false); return }
+      const { data, error } = await supabase.rpc('obrafacil_tem_licenca')
+      if (ativo) setLicenciado(!error && data === true)
+    }
+    verificarLicenca().catch(() => { if (ativo) setLicenciado(false) })
+    return () => { ativo = false }
+  }, [usuario])
 
   useEffect(() => {
     if (!supabaseConfigured || !authPronto || !usuario) return
@@ -432,8 +444,8 @@ export default function App() {
         </div>
       </header>
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px 32px' }}>
-        {pagina === 'painel' && <Painel {...{ produtos, clientes, orcamentos, obras, setPagina, formatarMoeda, temaEscuro, cardBg, border } } />}
-        {pagina === 'orcamentos' && <Orcamentos {...{ orcamentos, setOrcamentos, produtos, clientes, empresa, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
+        {pagina === 'painel' && <Painel {...{ produtos, clientes, orcamentos, obras, setPagina, formatarMoeda, temaEscuro, cardBg, border, licenciado } } />}
+        {pagina === 'orcamentos' && <Orcamentos {...{ orcamentos, setOrcamentos, produtos, clientes, empresa, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border, licenciado } } />}
         {pagina === 'produtos' && <Produtos {...{ produtos, setProdutos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'clientes' && <Clientes {...{ clientes, setClientes, orcamentos, mostrarNotificacao, temaEscuro, cardBg, border } } />}
         {pagina === 'obras' && <Obras {...{ obras, setObras, clientes, orcamentos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
