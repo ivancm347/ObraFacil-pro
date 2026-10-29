@@ -126,6 +126,13 @@ export default function Orcamentos({
     return Math.min(Number(orc.total) || 0, entrada + pagamentos)
   }
   const calcularSaldo = (orc) => Math.max(0, (Number(orc.total) || 0) - calcularAdiantamento(orc))
+  const statusFinanceiro = (orc) => calcularSaldo(orc) <= 0.009 ? 'Quitado' : calcularAdiantamento(orc) > 0 ? 'Parcialmente pago' : 'Pendente'
+  const estiloFinanceiro = (orc) => {
+    const status = statusFinanceiro(orc)
+    if (status === 'Quitado') return { background: temaEscuro ? '#143b2a' : '#dcfce7', color: '#166534' }
+    if (status === 'Parcialmente pago') return { background: temaEscuro ? '#493719' : '#fef3c7', color: '#92400e' }
+    return { background: temaEscuro ? '#492323' : '#fee2e2', color: '#991b1b' }
+  }
 
   const registrarPagamento = () => {
     if (!orcamentoSelecionado) return
@@ -341,6 +348,7 @@ export default function Orcamentos({
                 <div style={{ fontSize: '11px', opacity: 0.6, fontWeight: 700 }}>Nº</div>
                 <div style={{ fontWeight: 800, fontSize: '18px' }}>{orc.numero}</div>
                 <div style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', background: orc.status==='aprovado'?'#dcfce7':'#fef3c7', color: orc.status==='aprovado'?'#166534':'#92400e', display: 'inline-block', marginTop: '4px', textTransform: 'uppercase' }}>{orc.status||'pendente'}</div>
+                <div style={{ fontSize: '10px', padding: '4px 7px', borderRadius: '7px', ...estiloFinanceiro(orc), display: 'table', marginTop: '5px', fontWeight: 800 }}>{statusFinanceiro(orc)}</div>
               </div>
               <div style={{ flex: 1, minWidth: '160px' }}>
                 <div style={{ fontSize: '11px', opacity: 0.6, fontWeight: 700 }}>CLIENTE</div>
