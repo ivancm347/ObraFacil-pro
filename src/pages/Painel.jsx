@@ -7,6 +7,10 @@ const cardStyle = (dark, border) => ({ background: dark ? '#172235' : '#fff', bo
 
 export default function Painel({ produtos = [], clientes = [], orcamentos = [], obras = [], formatarMoeda, temaEscuro, cardBg, border, setPagina }) {
   const [ofertaDestaque, setOfertaDestaque] = useState(null)
+  const [licenciado, setLicenciado] = useState(false)
+  useEffect(() => {
+    try { setLicenciado(localStorage.getItem('obrafacil_licenca') === 'ativo') } catch { setLicenciado(false) }
+  }, [])
   useEffect(() => {
     let ativo = true
     const carregar = async () => {
@@ -68,7 +72,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>
     </section>
 
-    {ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
+    {!licenciado && ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
       <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px' }}>🛍️ OFERTA EM DESTAQUE</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, padding: 16, alignItems: 'center' }}>
         <div style={{ height: 180, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
@@ -83,10 +87,10 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         </div>
       </div>
     </section>}
-    <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
+    {!licenciado && <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
       <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver anúncios de ofertas?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Assine o PRO por <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
       <button type="button" onClick={() => window.alert('A assinatura ainda precisa de um checkout de pagamento e validação automática para liberar a remoção dos anúncios.')} style={{ border: 0, borderRadius: 11, padding: '12px 16px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>🔓 QUERO O PRO</button>
-    </section>
+    </section>}
 
     <div className="of-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 14, marginBottom: 25 }}>
       {stats.map((s, i) => <div key={s.label} className="of-card" style={{ ...panel, padding: 18, minWidth: 0, animation: `ofade .35s ease-out ${i * 50}ms both` }}>
