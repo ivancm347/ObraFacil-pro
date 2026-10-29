@@ -11,8 +11,8 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     let ativo = true
     const carregar = async () => {
       if (!supabaseConfigured) return
-      const { data } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,created_at').order('created_at', { ascending: false }).limit(1)
-      if (ativo) setOfertaDestaque(data?.[0] || null)
+      const { data, error } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,created_at,publicada').eq('publicada', true).order('created_at', { ascending: false }).limit(1)
+      if (ativo) setOfertaDestaque(!error && data?.length ? data[0] : null)
     }
     carregar()
     return () => { ativo = false }
@@ -68,7 +68,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>
     </section>
 
-    {!licenciado && ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
+    {ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
       <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px' }}>🛍️ OFERTA EM DESTAQUE</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, padding: 16, alignItems: 'center' }}>
         <div style={{ height: 180, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
