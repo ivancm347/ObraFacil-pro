@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import jsPDF from 'jspdf'
+import Icon from '../components/Icon.jsx'
 import { LIMITE_GRATIS } from '../constants.js'
 const getLicenciado = () => {
   try { return localStorage.getItem('obrafacil_licenca') === 'ativo' } catch { return false }
@@ -212,7 +213,7 @@ export default function Orcamentos({
 
       const logoHtml = licenciado && dataEmpresa.logo
         ? `<img src="${dataEmpresa.logo}" style="height:60px; max-width:140px; object-fit:contain;" />`
-        : `<div style="width:60px;height:60px;background:#F05A28;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;border-radius:12px;">OB</div>`
+        : `<img src="${new URL('./obrafacil-logo.svg', window.location.href).href}" style="height:60px;width:60px;object-fit:cover;border-radius:12px;" alt="ObraFácil PRO" />`
 
       const empresaNome = licenciado && dataEmpresa.nome ? dataEmpresa.nome : 'ObraFácil PRO'
       const empresaTel = licenciado && dataEmpresa.telefone ? `Tel: ${dataEmpresa.telefone}` : 'Gestão de Orçamentos'
@@ -281,7 +282,7 @@ export default function Orcamentos({
             Gerado por ObraFácil PRO - ${licenciado ? 'Versão Licenciada' : 'Versão Grátis - obrafacil-pro.netlify.app'} • ${new Date().toLocaleString('pt-BR')}
           </div>
           <div class="no-print" style="margin-top:20px;text-align:center;">
-            <button onclick="window.print()" style="padding:12px 24px;background:#F05A28;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;">🖨️ Imprimir / Salvar como PDF</button>
+            <button onclick="window.print()" style="padding:12px 24px;background:#F05A28;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;">Imprimir / Salvar como PDF</button>
             <button onclick="window.close()" style="padding:12px 24px;background:#e2e8f0;border:none;border-radius:10px;margin-left:8px;cursor:pointer;">Fechar</button>
             <div style="margin-top:12px;font-size:12px;color:#666;">Dica: No Chrome escolha "Salvar como PDF" na impressora para baixar o PDF com logo.</div>
           </div>
@@ -322,9 +323,9 @@ export default function Orcamentos({
       )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0 }}>📋 Orçamentos ({orcamentos.length})</h2>
+        <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 9 }}><Icon name="receipt" size={23} /> Orçamentos ({orcamentos.length})</h2>
         <button onClick={abrirNovo} style={{ padding: '12px 24px', background: '#F05A28', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
-          ➕ Novo Orçamento
+          <Icon name="plus" size={17} style={{ marginRight: 7 }} /> Novo Orçamento
         </button>
       </div>
 
@@ -353,11 +354,11 @@ export default function Orcamentos({
                 <div style={{ fontSize: '11px', opacity: 0.75 }}>Saldo: {formatarMoeda(calcularSaldo(orc))}</div>
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                <button onClick={() => abrirVer(orc)} title="Ver" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e0f2fe', cursor: 'pointer' }}>👁️</button>
-                <button onClick={() => gerarPDF(orc)} title={getLicenciado() ? 'PDF com logo' : 'PDF grátis (sem logo)'} style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: getLicenciado() ? '#fde68a' : '#ffedd5', cursor: 'pointer', fontWeight: 700 }}>📄</button>
-                <button onClick={() => compartilharWhatsApp(orc)} title="WhatsApp" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#dcfce7', cursor: 'pointer' }}>📲</button>
-                <button onClick={() => abrirEditar(orc)} title="Editar" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}>✏️</button>
-                <button onClick={() => excluir(orc.id)} title="Excluir" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}>🗑️</button>
+                <button onClick={() => abrirVer(orc)} title="Ver" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e0f2fe', cursor: 'pointer' }}><Icon name="eye" size={17} /></button>
+                <button onClick={() => gerarPDF(orc)} title={getLicenciado() ? 'PDF com logo' : 'PDF grátis (sem logo)'} style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: getLicenciado() ? '#fde68a' : '#ffedd5', cursor: 'pointer', fontWeight: 700 }}><Icon name="file" size={17} /></button>
+                <button onClick={() => compartilharWhatsApp(orc)} title="WhatsApp" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#dcfce7', cursor: 'pointer' }}><Icon name="whatsapp" size={17} /></button>
+                <button onClick={() => abrirEditar(orc)} title="Editar" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}><Icon name="edit" size={17} /></button>
+                <button onClick={() => excluir(orc.id)} title="Excluir" style={{ padding: '9px 11px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}><Icon name="trash" size={17} /></button>
               </div>
             </div>
           ))}
@@ -383,7 +384,7 @@ export default function Orcamentos({
               </tfoot>
             </table>
             <section style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f8fafc', border: `1px solid ${border || '#e2e8f0'}` }}>
-              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><span aria-hidden="true">▤</span> Histórico de pagamentos</h4>
+              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><span aria-hidden="true"<Icon name="wallet" size={17} /> Histórico de pagamentos</h4>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: 13, marginBottom: 12 }}>
                 <span>Total pago: <strong style={{ color: '#16a34a' }}>{formatarMoeda(calcularAdiantamento(orcamentoSelecionado))}</strong></span>
                 <span>Saldo: <strong style={{ color: '#F05A28' }}>{formatarMoeda(calcularSaldo(orcamentoSelecionado))}</strong></span>
@@ -408,8 +409,8 @@ export default function Orcamentos({
               ) : <p style={{ margin: 0, color: '#16a34a', fontWeight: 700, fontSize: 13 }}>Orçamento quitado.</p>}
             </section>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-              <button onClick={() => gerarPDF(orcamentoSelecionado) style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>📄 Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
-              <button onClick={() => compartilharWhatsApp(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#22c55e', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>📲 WhatsApp</button>
+              <button onClick={() => gerarPDF(orcamentoSelecionado) style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="file" size={17} style={{ marginRight: 7 }} /> Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
+              <button onClick={() => compartilharWhatsApp(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#22c55e', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="whatsapp" size={17} style={{ marginRight: 7 }} /> WhatsApp</button>
               <button onClick={() => setModoModal(null)} style={{ flex: 1, padding: '12px', border: 'none', background: '#1e293b', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>Fechar</button>
             </div>
           </div>
@@ -519,7 +520,7 @@ export default function Orcamentos({
                         <div style={{ fontSize: '9px', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase' }}>Subtotal</div>
                         <div style={{ fontWeight: 800, color: '#F05A28' }}>{formatarMoeda(item.subtotal)}</div>
                       </div>
-                      <button onClick={() => removerItem(i)} title="Remover item" style={{ border: 'none', background: '#fee2e2', color: '#dc2626', padding: '8px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+                      <button onClick={() => removerItem(i)} title="Remover item" style={{ border: 'none', background: '#fee2e2', color: '#dc2626', padding: '8px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}><Icon name="x" size={16} /></button>
                     </div>
                   ))}
                 </div>
@@ -527,7 +528,7 @@ export default function Orcamentos({
             </div>
 
             <div style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f0fdf4', border: '1px solid #86efac' }}>
-              <label style={{ ...labelStyle, marginTop: 0, opacity: 1, color: temaEscuro ? '#86efac' : '#166534' }}>💰 Valor adiantado / entrada (R$)</label>
+              <label style={{ ...labelStyle, marginTop: 0, opacity: 1, color: temaEscuro ? '#86efac' : '#166534' }}>Valor adiantado / entrada (R$)</label>
               <input
                 type="number"
                 min="0"
@@ -551,7 +552,7 @@ export default function Orcamentos({
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '22px' }}>
               <button onClick={() => setModoModal(null)} style={{ flex: 1, padding: '13px', border: '1.5px solid #d0d7e2', background: 'transparent', borderRadius: '10px', cursor: 'pointer', color: 'inherit', fontWeight: 600 }}>Cancelar</button>
-              <button onClick={salvar} style={{ flex: 1, padding: '13px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>💾 Salvar Orçamento</button>
+              <button onClick={salvar} style={{ flex: 1, padding: '13px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="check" size={17} style={{ marginRight: 7 }} /> Salvar Orçamento</button>
             </div>
           </div>
         </div>
