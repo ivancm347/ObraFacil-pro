@@ -5,12 +5,8 @@ import { supabase, supabaseConfigured } from '../lib/supabase.js'
 const money = (n, formatarMoeda) => formatarMoeda ? formatarMoeda(Number(n) || 0) : (Number(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const cardStyle = (dark, border) => ({ background: dark ? '#172235' : '#fff', border: `1px solid ${border || (dark ? '#2b3a50' : '#e6eaf0')}`, borderRadius: 18, boxShadow: dark ? 'none' : '0 5px 20px rgba(20,35,60,.045)' })
 
-export default function Painel({ produtos = [], clientes = [], orcamentos = [], obras = [], formatarMoeda, temaEscuro, cardBg, border, setPagina }) {
+export default function Painel({ produtos = [], clientes = [], orcamentos = [], obras = [], formatarMoeda, temaEscuro, cardBg, border, setPagina, licenciado = false }) {
   const [ofertaDestaque, setOfertaDestaque] = useState(null)
-  const [licenciado, setLicenciado] = useState(false)
-  useEffect(() => {
-    try { setLicenciado(localStorage.getItem('obrafacil_licenca') === 'ativo') } catch { setLicenciado(false) }
-  }, [])
   useEffect(() => {
     let ativo = true
     const carregar = async () => {
