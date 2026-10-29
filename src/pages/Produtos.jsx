@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from '../components/Icon.jsx'
 
 export default function Produtos({ produtos, setProdutos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border }) {
   const [busca, setBusca] = useState('')
@@ -200,7 +201,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0 }}>📦 Produtos ({filtrados.length}/{produtos.length})</h2>
+        <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 9 }}><Icon name="package" size={23} /> Produtos ({filtrados.length}/{produtos.length})</h2>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={baixarModeloCSV}
             style={{ padding: '12px 16px', background: temaEscuro ? '#334155' : '#eef2f7', color: 'inherit', border: '1px solid #d0d7e2', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
@@ -217,7 +218,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
           </button>
           <button onClick={abrirNovo}
             style={{ padding: '12px 24px', background: '#F05A28', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
-            ➕ Novo Produto
+            <Icon name="plus" size={17} style={{ marginRight: 7 }} /> Novo Produto
           </button>
         </div>
       </div>
@@ -250,8 +251,8 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
                 <div style={{ fontWeight: 800, fontSize: '20px', color: '#F05A28', marginTop: '8px' }}>{formatarMoeda(p.preco)}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-                <button onClick={() => abrirEditar(p)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}>✏️ Editar</button>
-                <button onClick={() => excluir(p.id)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}>🗑️</button>
+                <button onClick={() => abrirEditar(p)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}}><Icon name="edit" size={16} style={{ marginRight: 5 }} /> Editar</button>
+                <button onClick={() => excluir(p.id)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}}><Icon name="trash" size={16} /></button>
               </div>
             </div>
           ))}
@@ -261,7 +262,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
       {modoModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ background: temaEscuro ? '#1e293b' : '#fff', borderRadius: '20px', padding: '28px', maxWidth: '520px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' }}>
-            <h3 style={{ marginTop: 0 }}>{modoModal === 'novo' ? '➕ Novo Produto' : '✏️ Editar Produto'}</h3>
+            <h3 style={{ marginTop: 0 }}>{modoModal === 'novo' ? 'Novo Produto' : 'Editar Produto'}</h3>
 
             <label style={labelStyle}>Nome do produto / serviço *</label>
             <input type="text" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Ex: Placa Drywall ST 12.5mm"
@@ -295,7 +296,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
               <button onClick={() => setModoModal(null)} style={{ flex: 1, padding: '12px', border: '1.5px solid #d0d7e2', background: 'transparent', borderRadius: '10px', cursor: 'pointer', color: 'inherit' }}>Cancelar</button>
-              <button onClick={salvar} style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>💾 Salvar</button>
+              <button onClick={salvar} style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="check" size={16} style={{ marginRight: 6 }} /> Salvar</button>
             </div>
           </div>
         </div>
