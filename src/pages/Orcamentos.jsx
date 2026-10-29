@@ -384,7 +384,7 @@ export default function Orcamentos({
               </tfoot>
             </table>
             <section style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f8fafc', border: `1px solid ${border || '#e2e8f0'}` }}>
-              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><span aria-hidden="true"<Icon name="wallet" size={17} /> Histórico de pagamentos</h4>
+              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="wallet" size={17} /> Histórico de pagamentos</h4>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: 13, marginBottom: 12 }}>
                 <span>Total pago: <strong style={{ color: '#16a34a' }}>{formatarMoeda(calcularAdiantamento(orcamentoSelecionado))}</strong></span>
                 <span>Saldo: <strong style={{ color: '#F05A28' }}>{formatarMoeda(calcularSaldo(orcamentoSelecionado))}</strong></span>
@@ -409,7 +409,7 @@ export default function Orcamentos({
               ) : <p style={{ margin: 0, color: '#16a34a', fontWeight: 700, fontSize: 13 }}>Orçamento quitado.</p>}
             </section>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-              <button onClick={() => gerarPDF(orcamentoSelecionado) style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="file" size={17} style={{ marginRight: 7 }} /> Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
+              <button onClick={() => gerarPDF(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#F05A28', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="file" size={17} style={{ marginRight: 7 }} /> Gerar PDF {getLicenciado() ? 'com Logo' : '(Grátis)'}</button>
               <button onClick={() => compartilharWhatsApp(orcamentoSelecionado)} style={{ flex: 1, padding: '12px', border: 'none', background: '#22c55e', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}><Icon name="whatsapp" size={17} style={{ marginRight: 7 }} /> WhatsApp</button>
               <button onClick={() => setModoModal(null)} style={{ flex: 1, padding: '12px', border: 'none', background: '#1e293b', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}>Fechar</button>
             </div>
