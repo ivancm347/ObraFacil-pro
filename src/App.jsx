@@ -184,7 +184,7 @@ export default function App() {
   const [notificacao, setNotificacao] = useState(null)
   const [usuario, setUsuario] = useState(null)
   const [authPronto, setAuthPronto] = useState(!supabaseConfigured)
-  const [dadosCarregados, setDadosCarregados] = useState(!supabaseConfigured)
+  const [dadosCarregados, setDadosCarregados] = useState(false)
   const [cloudReady, setCloudReady] = useState(false)
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -408,6 +408,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: "'Inter', sans-serif", paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       {notificacao && <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#0e9f6e', color: '#fff', padding: '12px 20px', borderRadius: 12, fontWeight: 700, zIndex: 9999 }}>{notificacao}</div>}
+      {authErro && <div role="alert" style={{ position: 'fixed', top: notificacao ? 66 : 16, left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 28px)', width: 620, background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', padding: '12px 16px', borderRadius: 12, fontSize: 13, lineHeight: 1.45, zIndex: 9998, boxShadow: '0 8px 24px rgba(0,0,0,.12)' }}>{authErro}</div>}
             <style>{`
         html { overflow-x: hidden; max-width: 100vw; }
         body { overflow-x: hidden; max-width: 100vw; }
