@@ -5,6 +5,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
   const [ofertas, setOfertas] = useState([])
   const [form, setForm] = useState({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', link: '' })
   const [arquivoImagem, setArquivoImagem] = useState(null)
+  const [enviando, setEnviando] = useState(false)
   const [mostrarForm, setMostrarForm] = useState(false)
   const [busca, setBusca] = useState('')
   const [email, setEmail] = useState('')
@@ -75,11 +76,13 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
     if (arquivoImagem) {
       if (!arquivoImagem.type.startsWith('image/')) { mostrarNotificacao('Selecione um arquivo de imagem válido.'); return }
       if (arquivoImagem.size > 5 * 1024 * 1024) { mostrarNotificacao('A imagem deve ter no máximo 5 MB.'); return }
+      setEnviando(true)
       const extensao = (arquivoImagem.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
       const caminho = `${crypto.randomUUID()}.${extensao}`
       const { error: eUpload } = await supabase.storage.from('ofertas-imagens').upload(caminho, arquivoImagem, { cacheControl: '3600', upsert: false, contentType: arquivoImagem.type })
-      if (eUpload) { setErro('Não foi possível enviar a imagem. Confira se o bucket ofertas-imagens foi criado no Supabase: ' + eUpload.message); return }
+      if (eUpload) { setEnviando(false); setErro('Não foi possível enviar a imagem. Execute o SQL atualizado no Supabase para criar o armazenamento de imagens. Detalhe: ' + eUpload.message); return }
       imagemFinal = supabase.storage.from('ofertas-imagens').getPublicUrl(caminho).data.publicUrl
+      setEnviando(false)
     }
     const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_afiliado: url.href, publicada: true }
     const { error: eSalvar } = await supabase.from('ofertas').insert(registro)
@@ -150,7 +153,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
       </label>
       <label style={{ fontSize: 12, fontWeight: 700 }}>Escolher imagem do celular (opcional)
         <input type="file" accept="image/*" onChange={e => setArquivoImagem(e.target.files?.[0] || null)} style={{ ...campo, marginTop: 6 }} />
-        <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>Selecione uma foto da galeria. Máximo: 5 MB.</span>
+        <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>Selecione uma foto da galeria. Máximo: 5 MB.</span>{arquivoImagem && <span style={{ display: 'block', marginTop: 5, color: '#16a34a', fontWeight: 700 }}>Imagem selecionada: {arquivoImagem.name}</span>}
       </label>
       <label style={{ fontSize: 12, fontWeight: 700 }}>Ou link da imagem (opcional)
         <input type="url" value={form.imagem} onChange={e => setForm({ ...form, imagem: e.target.value })} placeholder="https://.../imagem.jpg" style={{ ...campo, marginTop: 6 }} />
@@ -160,7 +163,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
         <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} placeholder="Benefício principal" style={{ ...campo, marginTop: 6 }} />
       </label>
       <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
-        <button type="submit" style={{ border: 0, borderRadius: 10, padding: '12px 18px', background: '#16a34a', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Publicar oferta</button>
+        <button type="submit" disabled={enviando} style={{ border: 0, borderRadius: 10, padding: '12px 18px', background: enviando ? '#64748b' : '#16a34a', color: '#fff', fontWeight: 800, cursor: enviando ? 'wait' : 'pointer' }}>{enviando ? 'Enviando imagem...' : 'Publicar oferta'}</button>
       </div>
     </form>}
 
