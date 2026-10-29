@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from '../components/Icon.jsx'
 
 export default function Clientes({ clientes, setClientes, mostrarNotificacao, temaEscuro, cardBg, border }) {
   const [modoModal, setModoModal] = useState(null)
@@ -89,7 +90,7 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
           marginBottom: '20px'
         }}
       >
-        ➕ Novo Cliente
+        <Icon name="plus" size={16} style={{ marginRight: 6 }} /> Novo Cliente
       </button>
 
       {clientes.length === 0 ? (
@@ -145,7 +146,7 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
                     cursor: 'pointer'
                   }}
                 >
-                  ✏️ Editar
+                  <Icon name="edit" size={16} style={{ marginRight: 5 }} /> Editar
                 </button>
                 <button
                   onClick={() => excluir(cliente.id)}
@@ -159,7 +160,7 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
                     cursor: 'pointer'
                   }}
                 >
-                  🗑️ Excluir
+                  <Icon name="trash" size={16} style={{ marginRight: 5 }} /> Excluir
                 </button>
               </div>
             </div>
@@ -187,7 +188,7 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
             width: '100%'
           }}>
             <h3 style={{ marginTop: 0 }}>
-              {modoModal === 'novo' ? '➕ Novo Cliente' : '✏️ Editar Cliente'}
+              {modoModal === 'novo' ? 'Novo Cliente' : 'Editar Cliente'}
             </h3>
 
             <label style={{ display: 'block', marginTop: '14px', marginBottom: '6px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', opacity: 0.7 }}>
@@ -271,7 +272,7 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
                   cursor: 'pointer'
                 }}
               >
-                💾 Salvar
+                <Icon name="check" size={16} style={{ marginRight: 6 }} /> Salvar
               </button>
             </div>
           </div>
