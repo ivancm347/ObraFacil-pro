@@ -251,7 +251,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
                 <div style={{ fontWeight: 800, fontSize: '20px', color: '#F05A28', marginTop: '8px' }}>{formatarMoeda(p.preco)}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-                <button onClick={() => abrirEditar(p)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}}><Icon name="edit" size={16} style={{ marginRight: 5 }} /> Editar</button>
+                <button onClick={() => abrirEditar(p)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#e2e8f0', cursor: 'pointer' }}><Icon name="edit" size={16} style={{ marginRight: 5 }} /> Editar</button>
                 <button onClick={() => excluir(p.id)} style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', cursor: 'pointer' }}}><Icon name="trash" size={16} /></button>
               </div>
             </div>
