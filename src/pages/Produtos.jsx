@@ -9,9 +9,11 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
 
   const categorias = ['Todas', ...new Set(produtos.map(p => p.categoria).filter(Boolean))]
 
+  const normalizarBusca = valor => String(valor || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim()
   const filtrados = produtos.filter(p => {
-    const termo = busca.trim().toLowerCase()
-    const matchBusca = String(p.nome || '').toLowerCase().includes(termo) || String(p.codigo || '').toLowerCase().includes(termo)
+    const termo = normalizarBusca(busca)
+    const campos = [p.nome, p.codigo, p.categoria, p.unidade].map(normalizarBusca)
+    const matchBusca = !termo || campos.some(campo => campo.includes(termo))
     const matchCat = categoriaFiltro === 'Todas' || p.categoria === categoriaFiltro
     return matchBusca && matchCat
   })
