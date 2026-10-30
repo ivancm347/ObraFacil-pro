@@ -65,7 +65,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   ]
   const btn = (id) => setPagina && setPagina(id)
   return <div style={{ color: text, paddingBottom: 92 }}>
-    <style>{`@keyframes ofade { from { opacity:0; transform:translateY(7px) } to {opacity:1;transform:translateY(0)} } .of-card { transition:transform .18s, box-shadow .18s; } .of-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(20,35,60,.09)!important; } .of-action:hover { filter:brightness(.98); transform:translateY(-1px); } @media(max-width:640px){.of-offer-content{grid-template-columns:minmax(0,1fr)!important;padding:14px!important;gap:14px!important}.of-offer-content h2{font-size:19px!important}.of-offer-content .of-offer-image{height:180px!important}} @media(max-width:560px){.of-hero{padding:22px!important}.of-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-stat-value{font-size:21px!important}}`}</style>
+    <style>{`@keyframes ofade { from { opacity:0; transform:translateY(7px) } to {opacity:1;transform:translateY(0)} } .of-card { transition:transform .18s, box-shadow .18s; } .of-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(20,35,60,.09)!important; } .of-action:hover { filter:brightness(.98); transform:translateY(-1px); } @media(max-width:640px){.of-offer-content{flex-direction:column!important;padding:14px!important;gap:14px!important}.of-offer-content>div{width:100%!important;flex-basis:auto!important}.of-offer-content h2{font-size:19px!important}.of-offer-content .of-offer-image{height:180px!important}} @media(max-width:560px){.of-hero{padding:22px!important}.of-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-stat-value{font-size:21px!important}}`}</style>
     <section className="of-hero" style={{ background: 'linear-gradient(120deg,#111c31 0%,#1c3150 65%,#f05a28 155%)', borderRadius: 24, padding: '30px 32px', color: '#fff', position: 'relative', overflow: 'hidden', marginBottom: 24, animation: 'ofade .35s ease-out' }}>
       <div style={{ position: 'absolute', right: -24, top: -50, width: 220, height: 220, borderRadius: '50%', border: '34px solid rgba(255,255,255,.045)' }} />
       <div style={{ position: 'absolute', right: 48, bottom: -80, width: 170, height: 170, borderRadius: '50%', background: 'rgba(240,90,40,.12)' }} />
@@ -91,8 +91,8 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null
         const mp4 = /\.mp4(?:$|[?#])/i.test(v)
         const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&mute=1&playsinline=1' : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=1&muted=1' : vmId ? 'https://player.vimeo.com/video/' + vmId + '?autoplay=1&muted=1&playsinline=1' : ''
-        return <div className="of-offer-content" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14, alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ minWidth: 0 }}>
+        return <div className="of-offer-content" style={{ display: 'flex', flexDirection: 'row', gap: 14, padding: 14, alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ minWidth: 0, flex: '1 1 68%' }}>
             {(oferta.link_imagem || !v) && <div className="of-offer-image" style={{ height: 190, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
               {oferta.link_imagem ? <img src={oferta.link_imagem} alt={oferta.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
             </div>}
@@ -100,20 +100,20 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
               {videoSrc ? <iframe src={videoSrc} title={'Vídeo de ' + oferta.nome} loading="lazy" allow="autoplay; accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls autoPlay muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>}
             </div>}
           </div>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: '1 1 32%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{oferta.categoria || 'Oferta especial'}</span>
             <h2 style={{ margin: '7px 0', fontSize: 22, lineHeight: 1.25, fontWeight: 900 }}>{oferta.nome}</h2>
             {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 15, lineHeight: 1.6 }}>{oferta.descricao_curta}</p>}
             {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 25, fontWeight: 900, margin: '8px 0 12px' }}>{money(oferta.preco, formatarMoeda)}</div>}
             {(oferta.link_afiliado || oferta.link_video) && <a href={oferta.link_afiliado || oferta.link_video} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '13px 24px', fontWeight: 900, fontSize: 15, marginTop: 4 }}>SAIBA MAIS ↗</a>}
+            {ofertasDestaque.length > 1 && <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 14 }}>
+              <button type="button" onClick={() => setIndiceOferta(i => (i - 1 + ofertasDestaque.length) % ofertasDestaque.length)} aria-label="Oferta anterior" style={{ border: 0, borderRadius: 20, width: 34, height: 34, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>‹</button>
+              <div style={{ display: 'flex', gap: 5 }}>{ofertasDestaque.map((o, i) => <button key={o.id} type="button" onClick={() => setIndiceOferta(i)} aria-label={'Mostrar oferta ' + (i + 1)} style={{ width: i === indiceOferta ? 20 : 7, height: 7, border: 0, borderRadius: 9, background: i === indiceOferta ? '#f05a28' : (dark ? '#64748b' : '#cbd5e1'), cursor: 'pointer' }} />)}</div>
+              <button type="button" onClick={() => setIndiceOferta(i => (i + 1) % ofertasDestaque.length)} aria-label="Próxima oferta" style={{ border: 0, borderRadius: 20, width: 34, height: 34, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>›</button>
+            </div>}
           </div>
         </div>
       })()}
-      {ofertasDestaque.length > 0 && <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '0 12px 14px' }}>
-        <button type="button" onClick={() => setIndiceOferta(i => (i - 1 + ofertasDestaque.length) % ofertasDestaque.length)} aria-label="Oferta anterior" style={{ border: 0, borderRadius: 20, width: 36, height: 36, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>‹</button>
-        <div style={{ display: 'flex', gap: 5 }}>{ofertasDestaque.map((o, i) => <button key={o.id} type="button" onClick={() => setIndiceOferta(i)} aria-label={'Mostrar oferta ' + (i + 1)} style={{ width: i === indiceOferta ? 20 : 7, height: 7, border: 0, borderRadius: 9, background: i === indiceOferta ? '#f05a28' : (dark ? '#64748b' : '#cbd5e1'), cursor: 'pointer' }} />)}</div>
-        <button type="button" onClick={() => setIndiceOferta(i => (i + 1) % ofertasDestaque.length)} aria-label="Próxima oferta" style={{ border: 0, borderRadius: 20, width: 36, height: 36, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>›</button>
-      </div>}
     </section>}
     {!licenciado && <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
       <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver mais anúncios?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Adquira a versão PRO por apenas <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
