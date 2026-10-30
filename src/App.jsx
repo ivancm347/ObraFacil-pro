@@ -474,7 +474,7 @@ export default function App() {
         {pagina === 'gerenciar-clientes' && isAdmin && <GerenciarClientes {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro, isAdmin } } />}
       </main>
-            <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `1px solid ${border}`, borderRadius: 16, display: 'flex', padding: 6, gap: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
+            <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `2px solid ${temaEscuro ? '#475569' : '#cbd5e1'}`, borderRadius: 18, display: 'flex', padding: 8, gap: 6, boxShadow: '0 10px 34px rgba(0,0,0,0.22)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
         <style>{` nav::-webkit-scrollbar { display: none; } @media (max-width: 400px) { nav button { padding: 10px 12px !important; font-size: 12px !important; } } `}</style>
         {[
           { id: 'painel', label: 'Painel', icon: 'dashboard' },
@@ -487,7 +487,7 @@ export default function App() {
           { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
         ].map(item => {
           const ativo = pagina === item.id
-          return <button key={item.id} onClick={() => setPagina(item.id)} style={{ border: 'none', background: ativo ? '#F05A28' : 'transparent', color: ativo ? '#fff' : text, padding: '11px 14px', borderRadius: 11, cursor: 'pointer', fontWeight: ativo ? 700 : 600, fontSize: 12, flex: '0 0 auto', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, transition: 'all .18s' }}><Icon name={item.icon} size={16} strokeWidth={2.2} /><span>{item.label}</span>{item.badge>0?<span style={{ fontSize: 10, opacity: .8, background: ativo ? 'rgba(255,255,255,.2)' : (temaEscuro ? '#263449' : '#eef2f7'), padding: '2px 6px', borderRadius: 20 }}>{item.badge}</span>:null}</button>
+          return <button key={item.id} onClick={() => setPagina(item.id)} style={{ border: 'none', background: ativo ? '#F05A28' : (temaEscuro ? '#263449' : '#f1f5f9'), color: ativo ? '#fff' : (temaEscuro ? '#f8fafc' : '#172033'), padding: '13px 16px', borderRadius: 12, cursor: 'pointer', fontWeight: ativo ? 800 : 700, fontSize: 13, flex: '0 0 auto', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 9, transition: 'all .18s', border: ativo ? '1px solid #d94818' : `1px solid ${temaEscuro ? '#475569' : '#dbe2ea'}` }}><Icon name={item.icon} size={20} strokeWidth={2.5} /><span>{item.label}</span>{item.badge>0?<span style={{ fontSize: 10, opacity: .8, background: ativo ? 'rgba(255,255,255,.2)' : (temaEscuro ? '#263449' : '#eef2f7'), padding: '2px 6px', borderRadius: 20 }}>{item.badge}</span>:null}</button>
         })}
       </nav>
     </div>
