@@ -77,11 +77,11 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
             {(() => {
               const v = ofertaDestaque.link_video.trim();
               let host = '', path = '';
-              try { const u = new URL(v); host = u.hostname.replace(/^www\\./, ''); path = u.pathname; } catch {}
-              const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\\/(?:embed|shorts)\\/([^/]+)/)?.[1]) : null;
-              const ttId = host.endsWith('tiktok.com') ? path.match(/\\/video\\/(\\d+)/)?.[1] : null;
-              const vmId = host.endsWith('vimeo.com') ? path.match(/\\/(\\d+)/)?.[1] : null;
-              const mp4 = /\\.mp4(?:$|[?#])/i.test(v);
+              try { const u = new URL(v); host = u.hostname.replace(/^www\./, ''); path = u.pathname; } catch {}
+              const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1]) : null;
+              const ttId = host.endsWith('tiktok.com') ? path.match(/\/video\/(\d+)/)?.[1] : null;
+              const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null;
+              const mp4 = /\.mp4(?:$|[?#])/i.test(v);
               const src = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=0' : vmId ? 'https://player.vimeo.com/video/' + vmId : '';
               return src ? <iframe src={src} title={'Vídeo de ' + ofertaDestaque.nome} loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>;
             })()}
