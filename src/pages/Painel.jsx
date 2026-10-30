@@ -83,14 +83,14 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         const ttId = host.endsWith('tiktok.com') ? path.match(/\/video\/(\d+)/)?.[1] : null
         const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null
         const mp4 = /\.mp4(?:$|[?#])/i.test(v)
-        const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=0' : vmId ? 'https://player.vimeo.com/video/' + vmId : ''
+        const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&mute=1&playsinline=1' : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=1&muted=1' : vmId ? 'https://player.vimeo.com/video/' + vmId + '?autoplay=1&muted=1&playsinline=1' : ''
         return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 180px) minmax(0,1fr)', gap: 14, padding: 14, alignItems: 'center' }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ height: 130, borderRadius: 10, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
               {oferta.link_imagem ? <img src={oferta.link_imagem} alt={oferta.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
             </div>
             {v && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden', marginTop: 8 }}>
-              {videoSrc ? <iframe src={videoSrc} title={'Vídeo de ' + oferta.nome} loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>}
+              {videoSrc ? <iframe src={videoSrc} title={'Vídeo de ' + oferta.nome} loading="lazy" allow="autoplay; accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls autoPlay muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>}
             </div>}
           </div>
           <div style={{ minWidth: 0 }}>
