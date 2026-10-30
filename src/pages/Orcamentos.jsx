@@ -32,6 +32,10 @@ export default function Orcamentos({
   const [pagamentoValor, setPagamentoValor] = useState('')
   const [pagamentoData, setPagamentoData] = useState(new Date().toISOString().slice(0, 10))
   const [pagamentoObs, setPagamentoObs] = useState('')
+  const [adiantamentoValor, setAdiantamentoValor] = useState('')
+  const [adiantamentoData, setAdiantamentoData] = useState(new Date().toISOString().slice(0, 10))
+  const [adiantamentoMotivo, setAdiantamentoMotivo] = useState('Compra de material')
+  const [adiantamentoObs, setAdiantamentoObs] = useState('')
   const produtosFiltrados = produtos.filter(p => `${p.nome || ''} ${p.codigo || ''} ${p.categoria || ''}`.toLowerCase().includes(buscaProduto.trim().toLowerCase())).slice(0, 30)
 
   const abrirNovo = () => {
@@ -130,9 +134,10 @@ export default function Orcamentos({
 
   const calcularTotal = (itens) => itens.reduce((s, i) => s + i.subtotal, 0)
   const calcularAdiantamento = (orc) => {
-    const entrada = Math.max(0, Number(orc.adiantamento) || 0)
+    const entradaLegada = Math.max(0, Number(orc.adiantamento) || 0)
+    const entradas = Array.isArray(orc.adiantamentos) ? orc.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0
     const pagamentos = Array.isArray(orc.pagamentos) ? orc.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0
-    return Math.min(Number(orc.total) || 0, entrada + pagamentos)
+    return Math.min(Number(orc.total) || 0, entradaLegada + entradas + pagamentos)
   }
   const calcularSaldo = (orc) => Math.max(0, (Number(orc.total) || 0) - calcularAdiantamento(orc))
   const statusFinanceiro = (orc) => calcularSaldo(orc) <= 0.009 ? 'Quitado' : calcularAdiantamento(orc) > 0 ? 'Parcialmente pago' : 'Pendente'
@@ -141,6 +146,21 @@ export default function Orcamentos({
     if (status === 'Quitado') return { background: temaEscuro ? '#143b2a' : '#dcfce7', color: '#166534' }
     if (status === 'Parcialmente pago') return { background: temaEscuro ? '#493719' : '#fef3c7', color: '#92400e' }
     return { background: temaEscuro ? '#492323' : '#fee2e2', color: '#991b1b' }
+  }
+
+  const registrarAdiantamento = () => {
+    if (!orcamentoSelecionado) return
+    const valor = Number(String(adiantamentoValor).replace(',', '.'))
+    if (!Number.isFinite(valor) || valor <= 0) { mostrarNotificacao('Informe um valor de adiantamento maior que zero.'); return }
+    const saldo = calcularSaldo(orcamentoSelecionado)
+    if (valor > saldo + 0.00001) { mostrarNotificacao(`O adiantamento não pode passar do saldo de ${formatarMoeda(saldo)}.`); return }
+    const registro = { id: `adi-${Date.now()}`, data: adiantamentoData || new Date().toISOString().slice(0, 10), valor: Math.round(valor * 100) / 100, motivo: adiantamentoMotivo, observacao: adiantamentoObs.trim() }
+    const atualizado = { ...orcamentoSelecionado, adiantamentos: [...(Array.isArray(orcamentoSelecionado.adiantamentos) ? orcamentoSelecionado.adiantamentos : []), registro] }
+    atualizado.saldoRestante = calcularSaldo(atualizado)
+    setOrcamentos(orcamentos.map(o => o.id === atualizado.id ? atualizado : o))
+    setOrcamentoSelecionado(atualizado)
+    setAdiantamentoValor(''); setAdiantamentoObs('')
+    mostrarNotificacao('Adiantamento registrado no histórico.')
   }
 
   const registrarPagamento = () => {
@@ -397,7 +417,18 @@ export default function Orcamentos({
               </tfoot>
             </table>
             <section style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f8fafc', border: `1px solid ${border || '#e2e8f0'}` }}>
-              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="wallet" size={17} /> Histórico de pagamentos</h4>
+              <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="wallet" size={17} /> Histórico de recebimentos</h4>
+              {((orcamentoSelecionado.adiantamentos || []).length > 0 || Number(orcamentoSelecionado.adiantamento) > 0) && <div style={{ display: 'grid', gap: 7, marginBottom: 12 }}>
+                {Number(orcamentoSelecionado.adiantamento) > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: 10, borderRadius: 9, background: temaEscuro ? '#1e293b' : '#fff' }}><span>Adiantamento anterior</span><strong style={{ color: '#16a34a' }}>{formatarMoeda(orcamentoSelecionado.adiantamento)}</strong></div>}
+                {(orcamentoSelecionado.adiantamentos || []).map((a, i) => <div key={a.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: 10, borderRadius: 9, background: temaEscuro ? '#1e293b' : '#fff', border: '1px solid #e2e8f0' }}><div><strong>{a.data ? new Date(`${a.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'}</strong><div style={{ fontSize: 12, opacity: .8 }}>{a.motivo || 'Adiantamento'}{a.observacao ? ` — ${a.observacao}` : ''}</div></div><strong style={{ color: '#16a34a', whiteSpace: 'nowrap' }}>{formatarMoeda(a.valor)}</strong><button type="button" onClick={() => { if (!window.confirm('Excluir este adiantamento?')) return; const atualizado = { ...orcamentoSelecionado, adiantamentos: orcamentoSelecionado.adiantamentos.filter(x => x.id !== a.id) }; atualizado.saldoRestante = calcularSaldo(atualizado); setOrcamentos(orcamentos.map(o => o.id === atualizado.id ? atualizado : o)); setOrcamentoSelecionado(atualizado); mostrarNotificacao('Adiantamento excluído.') }} style={{ border: 0, borderRadius: 7, padding: 6, color: '#b91c1c', background: '#fee2e2' }}>Excluir</button></div>)}
+              </div>}
+              {calcularSaldo(orcamentoSelecionado) > 0.009 && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'end', marginBottom: 14 }}>
+                <div><label style={{ ...labelStyle, marginTop: 0 }}>Data do adiantamento</label><input type="date" value={adiantamentoData} onChange={e => setAdiantamentoData(e.target.value)} style={inputStyle()} /></div>
+                <div><label style={{ ...labelStyle, marginTop: 0 }}>Valor adiantado (R$)</label><input type="number" min="0.01" step="0.01" max={calcularSaldo(orcamentoSelecionado)} value={adiantamentoValor} onChange={e => setAdiantamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="0,00" style={inputStyle()} /></div>
+                <div><label style={{ ...labelStyle, marginTop: 0 }}>Motivo</label><select value={adiantamentoMotivo} onChange={e => setAdiantamentoMotivo(e.target.value)} style={inputStyle()}>{['Compra de material','Início da obra','Mão de obra','Equipamentos','Outra finalidade'].map(x => <option key={x}>{x}</option>)}</select></div>
+                <div><label style={{ ...labelStyle, marginTop: 0 }}>Observação</label><input value={adiantamentoObs} onChange={e => setAdiantamentoObs(e.target.value)} placeholder="Detalhe (opcional)" style={inputStyle()} /></div>
+                <button type="button" onClick={registrarAdiantamento} style={{ padding: '12px 14px', border: 0, borderRadius: 10, background: '#7c3aed', color: '#fff', fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Registrar adiantamento</button>
+              </div>}
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: 13, marginBottom: 12 }}>
                 <span>Total pago: <strong style={{ color: '#16a34a' }}>{formatarMoeda(calcularAdiantamento(orcamentoSelecionado))}</strong></span>
                 <span>Saldo: <strong style={{ color: '#F05A28' }}>{formatarMoeda(calcularSaldo(orcamentoSelecionado))}</strong></span>
