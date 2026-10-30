@@ -161,7 +161,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
         <input type="url" value={form.imagem} onChange={e => setForm({ ...form, imagem: e.target.value })} placeholder="https://.../imagem.jpg" style={{ ...campo, marginTop: 6 }} />
         <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>Se escolher uma foto do celular, ela terá prioridade sobre este link.</span>
       </label>
-      <label style={{ fontSize: 12, fontWeight: 700 }}>Link do vídeo (opcional)
+      <label style={{ fontSize: 12, fontWeight: 700 }}>Link de vídeo externo (opcional)
         <input type="url" value={form.video} onChange={e => setForm({ ...form, video: e.target.value })} placeholder="YouTube, TikTok ou vídeo MP4" style={{ ...campo, marginTop: 6 }} />
         <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>O vídeo aparecerá na oferta quando o formato for compatível.</span>
       </label>
