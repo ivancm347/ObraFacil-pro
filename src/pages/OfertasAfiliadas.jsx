@@ -172,17 +172,17 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
       <div style={{ fontSize: 36, marginBottom: 10 }}>🛍️</div>
       <h3 style={{ margin: '0 0 8px' }}>{busca ? 'Nenhuma oferta encontrada' : 'Ainda não há ofertas publicadas'}</h3>
       <p style={{ margin: 0, opacity: .7, fontSize: 13 }}>{admin ? 'Use “Adicionar oferta” para publicar o primeiro produto.' : 'As novas ofertas aparecerão aqui assim que forem publicadas.'}</p>
-    </div> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
-      {filtradas.map(o => <article key={o.id} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height: 155, background: temaEscuro ? '#0f172a' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {o.imagem ? <img src={o.imagem} alt={o.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 44 }}>🧰</span>}
+    </div> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(165px, 1fr))', gap: 10 }}>
+      {filtradas.map(o => <article key={o.id} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: 112, background: temaEscuro ? '#0f172a' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          {o.imagem ? <img src={o.imagem} alt={o.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
         </div>
-        <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: .6, color: '#F05A28', fontWeight: 800 }}>{o.categoria}</span>
-          <h3 style={{ margin: 0, fontSize: 15, lineHeight: 1.35 }}>{o.nome}</h3>
+          <h3 style={{ margin: 0, fontSize: 13, lineHeight: 1.3 }}>{o.nome}</h3>
           {o.descricao && <p style={{ margin: 0, fontSize: 12, opacity: .7 }}>{o.descricao}</p>}
-          {moeda(o.preco) && <strong style={{ fontSize: 18 }}>{moeda(o.preco)}</strong>}
-          <a href={o.link} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#F05A28', color: '#fff', borderRadius: 10, padding: '11px 10px', fontWeight: 800, fontSize: 13, marginTop: 'auto' }}>Ver oferta ↗</a>
+          {moeda(o.preco) && <strong style={{ fontSize: 16 }}>{moeda(o.preco)}</strong>}
+          <a href={o.link} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#F05A28', color: '#fff', borderRadius: 9, padding: '9px 8px', fontWeight: 800, fontSize: 12, marginTop: 'auto' }}>Ver oferta ↗</a>
           {admin && <button type="button" onClick={() => remover(o.id)} style={{ border: `1px solid ${border}`, background: 'transparent', color: texto, borderRadius: 9, padding: 8, cursor: 'pointer', fontSize: 11 }}>Remover da vitrine</button>}
         </div>
       </article>)}
