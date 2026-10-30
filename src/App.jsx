@@ -184,6 +184,9 @@ export default function App() {
   const [notificacao, setNotificacao] = useState(null)
   const [usuario, setUsuario] = useState(null)
   const [licenciado, setLicenciado] = useState(false)
+  // A área administrativa é liberada somente para a conta autenticada do proprietário.
+  const isAdmin = String(usuario?.email || '').trim().toLowerCase() === 'ivancm347@gmail.com'
+  const acessoPro = licenciado || isAdmin
   const [authPronto, setAuthPronto] = useState(!supabaseConfigured)
   const [dadosCarregados, setDadosCarregados] = useState(false)
   const [cloudReady, setCloudReady] = useState(false)
@@ -432,13 +435,13 @@ export default function App() {
         </div>
       </header>
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px 32px' }}>
-        {pagina === 'painel' && <Painel {...{ produtos, clientes, orcamentos, obras, setPagina, formatarMoeda, temaEscuro, cardBg, border, licenciado } } />}
-        {pagina === 'orcamentos' && <Orcamentos {...{ orcamentos, setOrcamentos, produtos, clientes, empresa, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border, licenciado } } />}
+        {pagina === 'painel' && <Painel {...{ produtos, clientes, orcamentos, obras, setPagina, formatarMoeda, temaEscuro, cardBg, border, licenciado: acessoPro, isAdmin } } />}
+        {pagina === 'orcamentos' && <Orcamentos {...{ orcamentos, setOrcamentos, produtos, clientes, empresa, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border, licenciado: acessoPro } } />}
         {pagina === 'produtos' && <Produtos {...{ produtos, setProdutos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'clientes' && <Clientes {...{ clientes, setClientes, orcamentos, mostrarNotificacao, temaEscuro, cardBg, border } } />}
         {pagina === 'obras' && <Obras {...{ obras, setObras, clientes, orcamentos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
-        {pagina === 'ofertas' && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
+        {pagina === 'ofertas' && isAdmin && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta } } />}
       </main>
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `1px solid ${border}`, borderRadius: 16, display: 'flex', padding: 6, gap: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
@@ -450,7 +453,7 @@ export default function App() {
           { id: 'clientes', label: 'Clientes', icon: 'users', badge: clientes.length },
           { id: 'obras', label: 'Obras', icon: 'building', badge: obras.length },
           { id: 'assistente', label: 'IA ObraFácil', icon: 'settings' },
-          { id: 'ofertas', label: 'Ofertas', icon: 'package' },
+          ...(isAdmin ? [{ id: 'ofertas', label: 'Ofertas', icon: 'package' }] : []),
           { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
         ].map(item => {
           const ativo = pagina === item.id
