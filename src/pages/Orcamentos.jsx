@@ -429,7 +429,7 @@ export default function Orcamentos({
                 <div><label style={{ ...labelStyle, marginTop: 0 }}>Motivo</label><select value={adiantamentoMotivo} onChange={e => setAdiantamentoMotivo(e.target.value)} style={inputStyle()}>{['Compra de material','Início da obra','Mão de obra','Equipamentos','Outra finalidade'].map(x => <option key={x}>{x}</option>)}</select></div>
                 <div><label style={{ ...labelStyle, marginTop: 0 }}>Observação</label><input value={adiantamentoObs} onChange={e => setAdiantamentoObs(e.target.value)} placeholder="Detalhe (opcional)" style={inputStyle()} /></div>
                 <button type="button" onClick={registrarAdiantamento} disabled={calcularSaldo(orcamentoSelecionado) <= 0.009} style={{ padding: '12px 14px', border: 0, borderRadius: 10, background: calcularSaldo(orcamentoSelecionado) <= 0.009 ? '#94a3b8' : '#7c3aed', color: '#fff', fontWeight: 700, cursor: calcularSaldo(orcamentoSelecionado) <= 0.009 ? 'not-allowed' : 'pointer', minHeight: 44 }}>Registrar adiantamento</button>
-              </div>}
+              </div>
               {calcularSaldo(orcamentoSelecionado) <= 0.009 && <p style={{ margin: '0 0 12px', color: '#16a34a', fontWeight: 700, fontSize: 13 }}>Orçamento quitado. Não há saldo para novo adiantamento.</p>}
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: 13, marginBottom: 12 }}>
                 <span>Total pago: <strong style={{ color: '#16a34a' }}>{formatarMoeda(calcularAdiantamento(orcamentoSelecionado))}</strong></span>
@@ -579,8 +579,10 @@ export default function Orcamentos({
                 type="number"
                 min="0"
                 step="0.01"
-                value={form.adiantamento ?? 0}
-                onChange={e => setForm({ ...form, adiantamento: Math.max(0, Number(e.target.value) || 0) })}
+                value={form.adiantamento ?? ''}
+                onChange={e => setForm({ ...form, adiantamento: e.target.value === '' ? '' : Math.max(0, Number(e.target.value) || 0) })}
+                onFocus={e => e.currentTarget.select()}
+                onBlur={() => setForm(f => ({ ...f, adiantamento: Math.max(0, Number(f.adiantamento) || 0) }))}
                 placeholder="0,00"
                 style={inputStyle({ fontSize: '18px', fontWeight: 700 })}
               />
