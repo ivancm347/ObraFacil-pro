@@ -11,7 +11,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     let ativo = true
     const carregar = async () => {
       if (!supabaseConfigured) return
-      const { data, error } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,created_at,publicada').eq('publicada', true).order('created_at', { ascending: false }).limit(1)
+      const { data, error } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,link_video,created_at,publicada').eq('publicada', true).order('created_at', { ascending: false }).limit(1)
       if (ativo) setOfertaDestaque(!error && data?.length ? data[0] : null)
     }
     carregar()
@@ -73,6 +73,19 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(0,1fr)', gap: 12, padding: 12, alignItems: 'center' }}>
         <div style={{ height: 110, borderRadius: 10, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
           {ofertaDestaque.link_imagem ? <img src={ofertaDestaque.link_imagem} alt={ofertaDestaque.nome || 'Produto em oferta'} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
+          {ofertaDestaque.link_video && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 10, overflow: 'hidden', marginTop: 10 }}>
+            {(() => {
+              const v = ofertaDestaque.link_video.trim();
+              let host = '', path = '';
+              try { const u = new URL(v); host = u.hostname.replace(/^www\\./, ''); path = u.pathname; } catch {}
+              const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\\/(?:embed|shorts)\\/([^/]+)/)?.[1]) : null;
+              const ttId = host.endsWith('tiktok.com') ? path.match(/\\/video\\/(\\d+)/)?.[1] : null;
+              const vmId = host.endsWith('vimeo.com') ? path.match(/\\/(\\d+)/)?.[1] : null;
+              const mp4 = /\\.mp4(?:$|[?#])/i.test(v);
+              const src = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=0' : vmId ? 'https://player.vimeo.com/video/' + vmId : '';
+              return src ? <iframe src={src} title={'Vídeo de ' + ofertaDestaque.nome} loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>;
+            })()}
+          </div>}
         </div>
         <div style={{ minWidth: 0 }}>
           <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{ofertaDestaque.categoria || 'Oferta especial'}</span>
