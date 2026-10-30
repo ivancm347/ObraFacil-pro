@@ -36,9 +36,11 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
   const pagamentosDaObra = obra => {
     const orcamento = orcamentoDaObra(obra)
     if (orcamento) {
-      const entrada = Math.max(0, Number(orcamento.adiantamento || 0))
+      const entradaLegada = Math.max(0, Number(orcamento.adiantamento || 0))
+      const adiantamentos = Array.isArray(orcamento.adiantamentos) ? orcamento.adiantamentos : []
+      const entrada = entradaLegada + adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor || 0)), 0)
       const parcelas = Array.isArray(orcamento.pagamentos) ? orcamento.pagamentos : []
-      return { adiantamento: entrada, pagamentos: parcelas, total: Math.min(Number(orcamento.total || orcamento.valor || 0), entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0)), vinculado: true }
+      return { adiantamento: entrada, adiantamentos, entradaLegada, pagamentos: parcelas, total: Math.min(Number(orcamento.total || orcamento.valor || 0), entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0)), vinculado: true }
     }
     const entrada = Math.max(0, Number(obra.adiantamento || 0))
     const parcelas = Array.isArray(obra.pagamentos) ? obra.pagamentos : []
@@ -232,7 +234,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
             </div>
             {(() => {
               const financeiro = pagamentosDaObra(financeiroObra)
-              const listaPagamentos = [...(financeiro.pagamentos || []), ...(financeiro.adiantamento > 0 ? [{ id: 'adiantamento-inicial', valor: financeiro.adiantamento, descricao: 'Adiantamento inicial', data: '' }] : [])]
+              const listaPagamentos = [...(financeiro.pagamentos || []), ...(financeiro.entradaLegada > 0 ? [{ id: 'adiantamento-inicial', valor: financeiro.entradaLegada, descricao: 'Adiantamento anterior', data: '' }] : []), ...(financeiro.adiantamentos || []).map(a => ({ ...a, descricao: [a.motivo || 'Adiantamento', a.observacao].filter(Boolean).join(' — ') }))]
               return [{ tipo: 'pagamento', titulo: financeiro.vinculado ? 'Pagamentos do orçamento vinculado' : 'Pagamentos recebidos', lista: listaPagamentos }, { tipo: 'despesa', titulo: 'Despesas da obra', lista: financeiroObra.despesas || [] }]
             })().map(grupo => (
               <div key={grupo.tipo} style={{ marginTop: 18 }}>
