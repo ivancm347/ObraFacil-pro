@@ -6,13 +6,14 @@ const money = (n, formatarMoeda) => formatarMoeda ? formatarMoeda(Number(n) || 0
 const cardStyle = (dark, border) => ({ background: dark ? '#172235' : '#fff', border: `1px solid ${border || (dark ? '#2b3a50' : '#e6eaf0')}`, borderRadius: 18, boxShadow: dark ? 'none' : '0 5px 20px rgba(20,35,60,.045)' })
 
 export default function Painel({ produtos = [], clientes = [], orcamentos = [], obras = [], formatarMoeda, temaEscuro, cardBg, border, setPagina, licenciado = false }) {
-  const [ofertaDestaque, setOfertaDestaque] = useState(null)
+  const [ofertasDestaque, setOfertasDestaque] = useState([])
+  const [indiceOferta, setIndiceOferta] = useState(0)
   useEffect(() => {
     let ativo = true
     const carregar = async () => {
       if (!supabaseConfigured) return
-      const { data, error } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,link_video,created_at,publicada').eq('publicada', true).order('created_at', { ascending: false }).limit(1)
-      if (ativo) setOfertaDestaque(!error && data?.length ? data[0] : null)
+      const { data, error } = await supabase.from('ofertas').select('id,nome,descricao_curta,preco,categoria,link_imagem,link_afiliado,link_video,created_at,publicada,destaque').eq('publicada', true).eq('destaque', true).order('created_at', { ascending: false })
+      if (ativo) { setOfertasDestaque(!error && data ? data : []); setIndiceOferta(0) }
     }
     carregar()
     return () => { ativo = false }
@@ -69,33 +70,43 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>
     </section>
 
-    {ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
-      <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px' }}>🛍️ OFERTA EM DESTAQUE</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(0,1fr)', gap: 12, padding: 12, alignItems: 'center' }}>
-        <div style={{ height: 110, borderRadius: 10, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
-          {ofertaDestaque.link_imagem ? <img src={ofertaDestaque.link_imagem} alt={ofertaDestaque.nome || 'Produto em oferta'} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
-          {ofertaDestaque.link_video && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 10, overflow: 'hidden', marginTop: 10 }}>
-            {(() => {
-              const v = ofertaDestaque.link_video.trim();
-              let host = '', path = '';
-              try { const u = new URL(v); host = u.hostname.replace(/^www\./, ''); path = u.pathname; } catch {}
-              const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1]) : null;
-              const ttId = host.endsWith('tiktok.com') ? path.match(/\/video\/(\d+)/)?.[1] : null;
-              const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null;
-              const mp4 = /\.mp4(?:$|[?#])/i.test(v);
-              const src = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=0' : vmId ? 'https://player.vimeo.com/video/' + vmId : '';
-              return src ? <iframe src={src} title={'Vídeo de ' + ofertaDestaque.nome} loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>;
-            })()}
-          </div>}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{ofertaDestaque.categoria || 'Oferta especial'}</span>
-          <h2 style={{ margin: '7px 0', fontSize: 16, lineHeight: 1.25, fontWeight: 900 }}>{ofertaDestaque.nome}</h2>
-          {ofertaDestaque.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 12, lineHeight: 1.5 }}>{ofertaDestaque.descricao_curta}</p>}
-          {ofertaDestaque.preco !== null && ofertaDestaque.preco !== '' && <div style={{ fontSize: 19, fontWeight: 900, margin: '6px 0 8px' }}>{money(ofertaDestaque.preco, formatarMoeda)}</div>}
-          <a href={ofertaDestaque.link_afiliado || '#'} target="_blank" rel="sponsored nofollow noopener noreferrer" onClick={e => { if (!ofertaDestaque.link_afiliado) e.preventDefault() }} style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '9px 13px', fontWeight: 900, fontSize: 12 }}>VER OFERTA ↗</a>
-        </div>
+    {ofertasDestaque.length > 0 && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
+      <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>🛍️ OFERTAS SELECIONADAS</span><span>{indiceOferta + 1} / {ofertasDestaque.length}</span>
       </div>
+      {(() => {
+        const oferta = ofertasDestaque[indiceOferta] || ofertasDestaque[0]
+        const v = (oferta.link_video || '').trim()
+        let host = '', path = ''
+        try { const u = new URL(v); host = u.hostname.replace(/^www\\./, ''); path = u.pathname } catch {}
+        const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\\/(?:embed|shorts)\\/([^/]+)/)?.[1]) : null
+        const ttId = host.endsWith('tiktok.com') ? path.match(/\\/video\\/(\\d+)/)?.[1] : null
+        const vmId = host.endsWith('vimeo.com') ? path.match(/\\/(\\d+)/)?.[1] : null
+        const mp4 = /\\.mp4(?:$|[?#])/i.test(v)
+        const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=0' : vmId ? 'https://player.vimeo.com/video/' + vmId : ''
+        return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 180px) minmax(0,1fr)', gap: 14, padding: 14, alignItems: 'center' }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ height: 130, borderRadius: 10, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
+              {oferta.link_imagem ? <img src={oferta.link_imagem} alt={oferta.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
+            </div>
+            {v && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden', marginTop: 8 }}>
+              {videoSrc ? <iframe src={videoSrc} title={'Vídeo de ' + oferta.nome} loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>}
+            </div>}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{oferta.categoria || 'Oferta especial'}</span>
+            <h2 style={{ margin: '7px 0', fontSize: 17, lineHeight: 1.25, fontWeight: 900 }}>{oferta.nome}</h2>
+            {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 12, lineHeight: 1.5 }}>{oferta.descricao_curta}</p>}
+            {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 19, fontWeight: 900, margin: '6px 0 8px' }}>{money(oferta.preco, formatarMoeda)}</div>}
+            {oferta.link_afiliado && <a href={oferta.link_afiliado} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '9px 13px', fontWeight: 900, fontSize: 12 }}>VER OFERTA ↗</a>}
+          </div>
+        </div>
+      })()}
+      {ofertasDestaque.length > 1 && <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '0 12px 14px' }}>
+        <button type="button" onClick={() => setIndiceOferta(i => (i - 1 + ofertasDestaque.length) % ofertasDestaque.length)} aria-label="Oferta anterior" style={{ border: 0, borderRadius: 20, width: 36, height: 36, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>‹</button>
+        <div style={{ display: 'flex', gap: 5 }}>{ofertasDestaque.map((o, i) => <button key={o.id} type="button" onClick={() => setIndiceOferta(i)} aria-label={'Mostrar oferta ' + (i + 1)} style={{ width: i === indiceOferta ? 20 : 7, height: 7, border: 0, borderRadius: 9, background: i === indiceOferta ? '#f05a28' : (dark ? '#64748b' : '#cbd5e1'), cursor: 'pointer' }} />)}</div>
+        <button type="button" onClick={() => setIndiceOferta(i => (i + 1) % ofertasDestaque.length)} aria-label="Próxima oferta" style={{ border: 0, borderRadius: 20, width: 36, height: 36, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>›</button>
+      </div>}
     </section>}
     {!licenciado && <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
       <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver mais anúncios?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Adquira a versão PRO por apenas <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
