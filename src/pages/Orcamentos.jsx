@@ -202,7 +202,8 @@ export default function Orcamentos({
     const total = calcularTotal(form.itens)
     const adiantamento = Math.min(total, Math.max(0, Number(form.adiantamento) || 0))
     const pagamentosExistentes = Array.isArray(form.pagamentos) ? form.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0
-    const saldoRestante = Math.max(0, total - Math.min(total, adiantamento + pagamentosExistentes))
+    const adiantamentosExistentes = Array.isArray(form.adiantamentos) ? form.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0
+    const saldoRestante = Math.max(0, total - Math.min(total, adiantamento + adiantamentosExistentes + pagamentosExistentes))
     const dados = { ...form, total, adiantamento, saldoRestante }
 
     if (modoModal === 'novo') {
