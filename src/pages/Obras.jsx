@@ -31,7 +31,20 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     return orcamentos.filter(o => o.clienteId === form.clienteId)
   }, [orcamentos, form.clienteId])
 
-  const recebidoObra = obra => Math.max(0, Number(obra.adiantamento || 0)) + (Array.isArray(obra.pagamentos) ? obra.pagamentos.reduce((s, p) => s + Number(p.valor || 0), 0) : 0)
+  // Quando a obra está vinculada, os recebimentos vêm exclusivamente do orçamento.
+  const orcamentoDaObra = obra => obra?.orcamentoId ? orcamentos.find(o => o.id === obra.orcamentoId) : null
+  const pagamentosDaObra = obra => {
+    const orcamento = orcamentoDaObra(obra)
+    if (orcamento) {
+      const entrada = Math.max(0, Number(orcamento.adiantamento || 0))
+      const parcelas = Array.isArray(orcamento.pagamentos) ? orcamento.pagamentos : []
+      return { adiantamento: entrada, pagamentos: parcelas, total: Math.min(Number(orcamento.total || orcamento.valor || 0), entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0)), vinculado: true }
+    }
+    const entrada = Math.max(0, Number(obra.adiantamento || 0))
+    const parcelas = Array.isArray(obra.pagamentos) ? obra.pagamentos : []
+    return { adiantamento: entrada, pagamentos: parcelas, total: entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0), vinculado: false }
+  }
+  const recebidoObra = obra => pagamentosDaObra(obra).total
   const despesasObra = obra => Array.isArray(obra.despesas) ? obra.despesas.reduce((s, d) => s + Number(d.valor || 0), 0) : 0
   const saldoReceber = obra => Math.max(0, Number(obra.valor || 0) - recebidoObra(obra))
 
@@ -97,6 +110,10 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     e.preventDefault()
     if (!financeiroObra) return
     const valor = Number(String(lancamentoValor).replace(',', '.'))
+    if (tipoLancamento === 'pagamento' && orcamentoDaObra(financeiroObra)) {
+      mostrarNotificacao?.('Esta obra está vinculada a um orçamento. Registre o recebimento no próprio orçamento para evitar duplicidade.')
+      return
+    }
     if (!Number.isFinite(valor) || valor <= 0) { mostrarNotificacao?.('Informe um valor maior que zero.'); return }
     const chave = tipoLancamento === 'pagamento' ? 'pagamentos' : 'despesas'
     const lista = Array.isArray(financeiroObra[chave]) ? financeiroObra[chave] : []
@@ -111,6 +128,10 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
 
   const excluirLancamento = (tipo, id) => {
     if (!financeiroObra) return
+    if (tipo === 'pagamento' && orcamentoDaObra(financeiroObra)) {
+      mostrarNotificacao?.('Os pagamentos desta obra são gerenciados no orçamento vinculado.')
+      return
+    }
     const chave = tipo === 'pagamento' ? 'pagamentos' : 'despesas'
     const atualizado = { ...financeiroObra, [chave]: (financeiroObra[chave] || []).filter(item => item.id !== id) }
     setObras(obras.map(o => o.id === atualizado.id ? atualizado : o))
@@ -198,17 +219,22 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
                 { label: 'Despesas lançadas', valor: despesasObra(financeiroObra), cor: '#dc2626' },
               ].map(k => <div key={k.label} style={{ border: `1px solid ${borda}`, borderRadius: 12, padding: 12 }}><div style={{ color: muted, fontSize: 10, fontWeight: 800 }}>{k.label.toUpperCase()}</div><div style={{ color: k.cor, fontWeight: 850, fontSize: 17, marginTop: 6 }}>{moeda(k.valor)}</div></div>)}
             </div>
+            {orcamentoDaObra(financeiroObra) && <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: temaEscuro ? '#163b2b' : '#e8f8ef', color: temaEscuro ? '#bbf7d0' : '#166534', fontSize: 12 }}>Esta obra está vinculada ao orçamento #{orcamentoDaObra(financeiroObra).numero || ''}. Os recebimentos e o adiantamento são consultados automaticamente nele. Registre novos pagamentos na tela do orçamento; aqui você pode lançar despesas.</div>}
             <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: temaEscuro ? '#111827' : '#f8fafc' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>Registrar lançamento</h3>
               <form onSubmit={registrarLancamento} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(145px,1fr))', gap: 10 }}>
-                <select value={tipoLancamento} onChange={e => setTipoLancamento(e.target.value)} style={inputStyle}><option value="pagamento">Pagamento recebido</option><option value="despesa">Despesa da obra</option></select>
+                <select value={tipoLancamento} onChange={e => setTipoLancamento(e.target.value)} style={inputStyle}><option value="pagamento" disabled={!!orcamentoDaObra(financeiroObra)}>Pagamento recebido{orcamentoDaObra(financeiroObra) ? ' (registrar no orçamento)' : ''}</option><option value="despesa">Despesa da obra</option></select>
                 <input required type="number" min="0.01" step="0.01" value={lancamentoValor} onChange={e => setLancamentoValor(e.target.value)} placeholder="Valor R$" style={inputStyle} />
                 <input type="date" value={lancamentoData} onChange={e => setLancamentoData(e.target.value)} style={inputStyle} />
                 <input value={lancamentoDescricao} onChange={e => setLancamentoDescricao(e.target.value)} placeholder="Descrição (opcional)" style={inputStyle} />
                 <button type="submit" style={{ border: 0, borderRadius: 10, background: '#f05a28', color: '#fff', fontWeight: 800, padding: 11, cursor: 'pointer' }}>＋ Registrar</button>
               </form>
             </div>
-            {[{ tipo: 'pagamento', titulo: 'Pagamentos recebidos', lista: [...(financeiroObra.pagamentos || []), ...(Number(financeiroObra.adiantamento || 0) > 0 ? [{ id: 'adiantamento-inicial', valor: Number(financeiroObra.adiantamento), descricao: 'Adiantamento inicial', data: '' }] : [])] }, { tipo: 'despesa', titulo: 'Despesas da obra', lista: financeiroObra.despesas || [] }].map(grupo => (
+            {(() => {
+              const financeiro = pagamentosDaObra(financeiroObra)
+              const listaPagamentos = [...(financeiro.pagamentos || []), ...(financeiro.adiantamento > 0 ? [{ id: 'adiantamento-inicial', valor: financeiro.adiantamento, descricao: 'Adiantamento inicial', data: '' }] : [])]
+              return [{ tipo: 'pagamento', titulo: financeiro.vinculado ? 'Pagamentos do orçamento vinculado' : 'Pagamentos recebidos', lista: listaPagamentos }, { tipo: 'despesa', titulo: 'Despesas da obra', lista: financeiroObra.despesas || [] }]
+            })().map(grupo => (
               <div key={grupo.tipo} style={{ marginTop: 18 }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{grupo.titulo}</h3>
                 {grupo.lista.length === 0 ? <div style={{ color: muted, fontSize: 12 }}>Nenhum lançamento ainda.</div> : grupo.lista.map(item => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: `1px solid ${borda}` }}><div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13 }}>{item.descricao}</div><div style={{ color: muted, fontSize: 11 }}>{item.data || 'Adiantamento cadastrado'}</div></div><strong style={{ color: grupo.tipo === 'pagamento' ? '#16a34a' : '#dc2626' }}>{moeda(item.valor)}</strong>{item.id !== 'adiantamento-inicial' && <button type="button" onClick={() => excluirLancamento(grupo.tipo, item.id)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#b91c1c', background: '#fee2e2', cursor: 'pointer' }}>Excluir</button>}</div>)}
