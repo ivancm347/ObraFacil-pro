@@ -99,6 +99,14 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
     await carregarOfertas()
   }
 
+  const alternarPainel = async (o) => {
+    if (!admin) return
+    const { error: eAtualizar } = await supabase.from('ofertas').update({ destaque: !o.destaque }).eq('id', o.id)
+    if (eAtualizar) { setErro('Não foi possível atualizar a seleção do painel: ' + eAtualizar.message); return }
+    mostrarNotificacao(o.destaque ? 'Oferta retirada do carrossel do painel.' : 'Oferta adicionada ao carrossel do painel!')
+    await carregarOfertas()
+  }
+
   const remover = async (id) => {
     if (!admin) return
     if (!confirm('Remover esta oferta da vitrine de todos os clientes?')) return
@@ -205,6 +213,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
           </div>}
           {moeda(o.preco) && <strong style={{ fontSize: 16 }}>{moeda(o.preco)}</strong>}
           {o.link && <a href={o.link} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#F05A28', color: '#fff', borderRadius: 9, padding: '9px 8px', fontWeight: 800, fontSize: 12, marginTop: 'auto' }}>Ver oferta ↗</a>}
+          {admin && <button type="button" onClick={() => alternarPainel(o)} style={{ border: 0, background: o.destaque ? '#dcfce7' : (temaEscuro ? '#26364b' : '#f1f5f9'), color: o.destaque ? '#166534' : texto, borderRadius: 9, padding: 9, cursor: 'pointer', fontSize: 11, fontWeight: 800 }}>{o.destaque ? '✓ No carrossel do painel' : '+ Exibir no painel'}</button>}
           {admin && <button type="button" onClick={() => remover(o.id)} style={{ border: `1px solid ${border}`, background: 'transparent', color: texto, borderRadius: 9, padding: 8, cursor: 'pointer', fontSize: 11 }}>Remover da vitrine</button>}
         </div>
       </article>)}
