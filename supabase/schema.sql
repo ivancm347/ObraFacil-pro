@@ -25,6 +25,8 @@ alter table public.ofertas add column if not exists preco numeric(10,2);
 alter table public.ofertas add column if not exists preco_antigo numeric(10,2);
 alter table public.ofertas add column if not exists categoria text default 'Ferramentas';
 alter table public.ofertas add column if not exists link_afiliado text;
+-- O link de afiliado é opcional; permite publicar ofertas somente com vídeo.
+alter table public.ofertas alter column link_afiliado drop not null;
 alter table public.ofertas add column if not exists link_imagem text;
 alter table public.ofertas add column if not exists descricao_curta text;
 alter table public.ofertas add column if not exists descricao_longa text;
