@@ -109,7 +109,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
           </div>
         </div>
       })()}
-      {ofertasDestaque.length > 1 && <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '0 12px 14px' }}>
+      {ofertasDestaque.length > 0 && <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '0 12px 14px' }}>
         <button type="button" onClick={() => setIndiceOferta(i => (i - 1 + ofertasDestaque.length) % ofertasDestaque.length)} aria-label="Oferta anterior" style={{ border: 0, borderRadius: 20, width: 36, height: 36, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>‹</button>
         <div style={{ display: 'flex', gap: 5 }}>{ofertasDestaque.map((o, i) => <button key={o.id} type="button" onClick={() => setIndiceOferta(i)} aria-label={'Mostrar oferta ' + (i + 1)} style={{ width: i === indiceOferta ? 20 : 7, height: 7, border: 0, borderRadius: 9, background: i === indiceOferta ? '#f05a28' : (dark ? '#64748b' : '#cbd5e1'), cursor: 'pointer' }} />)}</div>
         <button type="button" onClick={() => setIndiceOferta(i => (i + 1) % ofertasDestaque.length)} aria-label="Próxima oferta" style={{ border: 0, borderRadius: 20, width: 36, height: 36, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>›</button>
