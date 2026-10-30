@@ -105,7 +105,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
             <h2 style={{ margin: '7px 0', fontSize: 22, lineHeight: 1.25, fontWeight: 900 }}>{oferta.nome}</h2>
             {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 15, lineHeight: 1.6 }}>{oferta.descricao_curta}</p>}
             {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 25, fontWeight: 900, margin: '8px 0 12px' }}>{money(oferta.preco, formatarMoeda)}</div>}
-            {oferta.link_afiliado && <a href={oferta.link_afiliado} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '13px 24px', fontWeight: 900, fontSize: 15, marginTop: 4 }}>VER OFERTA ↗</a>}
+            {(oferta.link_afiliado || oferta.link_video) && <a href={oferta.link_afiliado || oferta.link_video} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '13px 24px', fontWeight: 900, fontSize: 15, marginTop: 4 }}>SAIBA MAIS ↗</a>}
           </div>
         </div>
       })()}
