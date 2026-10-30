@@ -25,14 +25,15 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const pendentes = orcamentos.filter(o => ['pendente', 'em análise', 'em analise'].includes(String(o.status || 'pendente').toLowerCase()))
   const aprovados = orcamentos.filter(o => String(o.status || '').toLowerCase().includes('aprov'))
   const totalDoOrcamento = (o) => Math.max(0, Number(o.total || (o.itens || []).reduce((a, i) => a + Number(i.subtotal || Number(i.quantidade || 0) * Number(i.preco || 0)), 0)) || 0)
-  const totalPago = (o) => Math.min(totalDoOrcamento(o), Math.max(0, Number(o.adiantamento) || 0) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0))
+  const totalPago = (o) => Math.min(totalDoOrcamento(o), Math.max(0, Number(o.adiantamento) || 0) + (Array.isArray(o.adiantamentos) ? o.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0))
   const saldoAReceber = orcamentos.reduce((s, o) => s + Math.max(0, totalDoOrcamento(o) - totalPago(o)), 0)
   const totalRecebido = orcamentos.reduce((s, o) => s + totalPago(o), 0)
   const mesAtual = new Date().toISOString().slice(0, 7)
   const recebidoNoMes = orcamentos.reduce((s, o) => {
     const entradaInicial = String(o.data || '').startsWith(mesAtual) ? Math.max(0, Number(o.adiantamento) || 0) : 0
+    const adiantamentosMes = Array.isArray(o.adiantamentos) ? o.adiantamentos.filter(a => String(a.data || '').startsWith(mesAtual)).reduce((v, a) => v + Math.max(0, Number(a.valor) || 0), 0) : 0
     const parcelasMes = Array.isArray(o.pagamentos) ? o.pagamentos.filter(p => String(p.data || '').startsWith(mesAtual)).reduce((v, p) => v + Math.max(0, Number(p.valor) || 0), 0) : 0
-    return s + entradaInicial + parcelasMes
+    return s + entradaInicial + adiantamentosMes + parcelasMes
   }, 0)
   const orcamentosComSaldo = orcamentos.filter(o => totalDoOrcamento(o) - totalPago(o) > 0.009).length
   const situacaoFinanceira = (o) => totalDoOrcamento(o) - totalPago(o) <= 0.009 ? 'Quitado' : totalPago(o) > 0 ? 'Parcialmente pago' : 'Pendente'
