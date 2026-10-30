@@ -84,7 +84,9 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
       imagemFinal = supabase.storage.from('ofertas-imagens').getPublicUrl(caminho).data.publicUrl
       setEnviando(false)
     }
-    const video = form.video.trim();\n    if (video) { try { const videoUrl = new URL(video); if (!['https:', 'http:'].includes(videoUrl.protocol)) throw new Error(); } catch { mostrarNotificacao('Digite um link de vídeo válido começando com https://'); return } }\n    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_video: video || null, link_afiliado: url.href, publicada: true }
+    const video = form.video.trim();
+    if (video) { try { const videoUrl = new URL(video); if (!['https:', 'http:'].includes(videoUrl.protocol)) throw new Error(); } catch { mostrarNotificacao('Digite um link de vídeo válido começando com https://'); return } }
+    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_video: video || null, link_afiliado: url.href, publicada: true }
     const { error: eSalvar } = await supabase.from('ofertas').insert(registro)
     if (eSalvar) { setErro('Não foi possível publicar: ' + eSalvar.message); return }
     setForm({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', video: '', link: '' })
@@ -159,7 +161,11 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
         <input type="url" value={form.imagem} onChange={e => setForm({ ...form, imagem: e.target.value })} placeholder="https://.../imagem.jpg" style={{ ...campo, marginTop: 6 }} />
         <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>Se escolher uma foto do celular, ela terá prioridade sobre este link.</span>
       </label>
-      <label style={{ fontSize: 12, fontWeight: 700 }}>Link do vídeo (opcional)\n        <input type="url" value={form.video} onChange={e => setForm({ ...form, video: e.target.value })} placeholder="YouTube, TikTok ou vídeo MP4" style={{ ...campo, marginTop: 6 }} />\n        <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>O vídeo aparecerá na oferta quando o formato for compatível.</span>\n      </label>\n      <label style={{ fontSize: 12, fontWeight: 700 }}>Descrição curta
+      <label style={{ fontSize: 12, fontWeight: 700 }}>Link do vídeo (opcional)
+        <input type="url" value={form.video} onChange={e => setForm({ ...form, video: e.target.value })} placeholder="YouTube, TikTok ou vídeo MP4" style={{ ...campo, marginTop: 6 }} />
+        <span style={{ display: 'block', marginTop: 5, opacity: .7, fontWeight: 400 }}>O vídeo aparecerá na oferta quando o formato for compatível.</span>
+      </label>
+      <label style={{ fontSize: 12, fontWeight: 700 }}>Descrição curta
         <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} placeholder="Benefício principal" style={{ ...campo, marginTop: 6 }} />
       </label>
       <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
@@ -180,7 +186,10 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
         <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: .6, color: '#F05A28', fontWeight: 800 }}>{o.categoria}</span>
           <h3 style={{ margin: 0, fontSize: 13, lineHeight: 1.3 }}>{o.nome}</h3>
-          {o.descricao && <p style={{ margin: 0, fontSize: 12, opacity: .7 }}>{o.descricao}</p>}\n          {o.video && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden' }}>\n            {(() => { const v = o.video; const yt = v.match(/(?:youtube\\.com\\/(?:watch\\?.*v=|embed\\/|shorts\\/)|youtu\\.be\\/)([\\w-]{11})/); const tt = v.match(/tiktok\\.com\\/@[^/]+\\/video\\/(\\d+)/); const vm = v.match(/vimeo\\.com\\/(\\d+)/); const src = yt ? 'https://www.youtube-nocookie.com/embed/' + yt[1] : tt ? 'https://www.tiktok.com/player/v1/' + tt[1] + '?autoplay=0' : vm ? 'https://player.vimeo.com/video/' + vm[1] : /\\.mp4(?:$|[?#])/i.test(v) ? null : ''; return src ? <iframe src={src} title={'Vídeo de ' + o.nome} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : /\\.mp4(?:$|[?#])/i.test(v) ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a> })()}\n          </div>}
+          {o.descricao && <p style={{ margin: 0, fontSize: 12, opacity: .7 }}>{o.descricao}</p>}
+          {o.video && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden' }}>
+            {(() => { const v = o.video; const yt = v.match(/(?:youtube\\.com\\/(?:watch\\?.*v=|embed\\/|shorts\\/)|youtu\\.be\\/)([\\w-]{11})/); const tt = v.match(/tiktok\\.com\\/@[^/]+\\/video\\/(\\d+)/); const vm = v.match(/vimeo\\.com\\/(\\d+)/); const src = yt ? 'https://www.youtube-nocookie.com/embed/' + yt[1] : tt ? 'https://www.tiktok.com/player/v1/' + tt[1] + '?autoplay=0' : vm ? 'https://player.vimeo.com/video/' + vm[1] : /\\.mp4(?:$|[?#])/i.test(v) ? null : ''; return src ? <iframe src={src} title={'Vídeo de ' + o.nome} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : /\\.mp4(?:$|[?#])/i.test(v) ? <video src={v} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a> })()}
+          </div>}
           {moeda(o.preco) && <strong style={{ fontSize: 16 }}>{moeda(o.preco)}</strong>}
           <a href={o.link} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#F05A28', color: '#fff', borderRadius: 9, padding: '9px 8px', fontWeight: 800, fontSize: 12, marginTop: 'auto' }}>Ver oferta ↗</a>
           {admin && <button type="button" onClick={() => remover(o.id)} style={{ border: `1px solid ${border}`, background: 'transparent', color: texto, borderRadius: 9, padding: 8, cursor: 'pointer', fontSize: 11 }}>Remover da vitrine</button>}
