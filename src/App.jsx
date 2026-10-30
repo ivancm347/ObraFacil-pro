@@ -215,6 +215,24 @@ export default function App() {
     }
   }
 
+  // Cache separado por usuário: impede que contas diferentes compartilhem dados no mesmo navegador.
+  const lerLocalUsuario = (userId) => {
+    try {
+      const valor = localStorage.getItem(`obrafacil_dados_usuario_${userId}`)
+      return valor ? JSON.parse(valor) : null
+    } catch {
+      return null
+    }
+  }
+
+  const dadosIniciais = () => ({
+    produtos: SEED,
+    clientes: [],
+    orcamentos: [],
+    obras: [],
+    empresa: { nome: 'ObraFacil PRO', telefone: '(13) 99999-9999', cnpj: '', pix: '', endereco: '', logo: '' }
+  })
+
   const aplicarDados = (dados) => {
     setProdutos(Array.isArray(dados?.produtos) ? dados.produtos : SEED)
     setClientes(Array.isArray(dados?.clientes) ? dados.clientes : [])
@@ -290,8 +308,9 @@ export default function App() {
 
       if (!ativo) return
       if (error) {
-        aplicarDados(lerLocal())
-        setAuthErro('A conta entrou, mas o banco ainda não respondeu. Confira se executou o arquivo supabase/schema.sql no Supabase. Seus dados locais foram mantidos.')
+        aplicarDados(lerLocalUsuario(usuario.id) || dadosIniciais())
+        setCloudReady(false)
+        setAuthErro('A conta entrou, mas o banco ainda não respondeu. Confira se executou o arquivo supabase/schema.sql no Supabase. O cache desta conta foi preservado.')
         setDadosCarregados(true)
         return
       }
@@ -299,7 +318,8 @@ export default function App() {
       if (data?.payload && typeof data.payload === 'object') {
         aplicarDados(data.payload)
       } else {
-        const locais = lerLocal()
+        // Conta sem registro na nuvem: inicia com cache próprio ou dados limpos, nunca com o cache global.
+        const locais = lerLocalUsuario(usuario.id) || dadosIniciais()
         aplicarDados(locais)
         const { error: gravacaoErro } = await supabase.from('obrafacil_dados').upsert({
           user_id: usuario.id,
@@ -321,8 +341,9 @@ export default function App() {
 
     carregar().catch(() => {
       if (!ativo) return
-      aplicarDados(lerLocal())
-      setAuthErro('Falha ao carregar os dados da nuvem. Os dados locais foram mantidos; confira a conexão do Supabase.')
+      aplicarDados(lerLocalUsuario(usuario.id) || dadosIniciais())
+      setCloudReady(false)
+      setAuthErro('Falha ao carregar os dados da nuvem. O cache desta conta foi preservado; confira a conexão do Supabase.')
       setDadosCarregados(true)
     })
 
@@ -332,15 +353,22 @@ export default function App() {
   useEffect(() => {
     if (!dadosCarregados) return
     try {
-      localStorage.setItem('obrafacil_produtos', JSON.stringify(produtos))
-      localStorage.setItem('obrafacil_clientes', JSON.stringify(clientes))
-      localStorage.setItem('obrafacil_orcamentos', JSON.stringify(orcamentos))
-      localStorage.setItem('obrafacil_obras', JSON.stringify(obras))
-      localStorage.setItem('obrafacil_empresa', JSON.stringify(empresa))
+      const payload = { produtos, clientes, orcamentos, obras, empresa }
+      if (supabaseConfigured && usuario) {
+        // Dados autenticados ficam isolados por ID de usuário.
+        localStorage.setItem(`obrafacil_dados_usuario_${usuario.id}`, JSON.stringify(payload))
+      } else {
+        // Mantém o modo local/anônimo compatível com versões anteriores.
+        localStorage.setItem('obrafacil_produtos', JSON.stringify(produtos))
+        localStorage.setItem('obrafacil_clientes', JSON.stringify(clientes))
+        localStorage.setItem('obrafacil_orcamentos', JSON.stringify(orcamentos))
+        localStorage.setItem('obrafacil_obras', JSON.stringify(obras))
+        localStorage.setItem('obrafacil_empresa', JSON.stringify(empresa))
+      }
     } catch (e) {
       console.error('Não foi possível salvar os dados locais', e)
     }
-  }, [produtos, clientes, orcamentos, obras, empresa, dadosCarregados])
+  }, [produtos, clientes, orcamentos, obras, empresa, dadosCarregados, usuario])
 
   useEffect(() => {
     if (!supabaseConfigured || !usuario || !cloudReady || !dadosCarregados) return
