@@ -78,11 +78,11 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         const oferta = ofertasDestaque[indiceOferta] || ofertasDestaque[0]
         const v = (oferta.link_video || '').trim()
         let host = '', path = ''
-        try { const u = new URL(v); host = u.hostname.replace(/^www\\./, ''); path = u.pathname } catch {}
-        const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\\/(?:embed|shorts)\\/([^/]+)/)?.[1]) : null
-        const ttId = host.endsWith('tiktok.com') ? path.match(/\\/video\\/(\\d+)/)?.[1] : null
-        const vmId = host.endsWith('vimeo.com') ? path.match(/\\/(\\d+)/)?.[1] : null
-        const mp4 = /\\.mp4(?:$|[?#])/i.test(v)
+        try { const u = new URL(v); host = u.hostname.replace(/^www\./, ''); path = u.pathname } catch {}
+        const ytId = host === 'youtu.be' ? path.split('/').filter(Boolean)[0] : host.endsWith('youtube.com') ? (new URL(v).searchParams.get('v') || path.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1]) : null
+        const ttId = host.endsWith('tiktok.com') ? path.match(/\/video\/(\d+)/)?.[1] : null
+        const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null
+        const mp4 = /\.mp4(?:$|[?#])/i.test(v)
         const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=0' : vmId ? 'https://player.vimeo.com/video/' + vmId : ''
         return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 180px) minmax(0,1fr)', gap: 14, padding: 14, alignItems: 'center' }}>
           <div style={{ minWidth: 0 }}>
