@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 
-export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta }) {
+export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro = false, isAdmin = false }) {
   const arquivoRef = useRef(null)
   const [form, setForm] = useState(() => ({
     nome: empresa.nome || '',
@@ -93,7 +93,7 @@ export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mo
             </div>
           </form>}
         </div>}
-        <form onSubmit={salvar}>
+        {acessoPro || isAdmin ? <form onSubmit={salvar}>
           <div style={{ marginTop: 22, border: `1px solid ${linha}`, borderRadius: 16, background: fundo, padding: 20, boxShadow: '0 5px 18px rgba(15,23,42,.05)' }}>
             <h2 style={{ fontSize: 18, fontWeight: 800 }}>Dados da empresa</h2>
             <p style={{ color: secundaria, fontSize: 13, marginTop: 4 }}>Essas informações serão usadas nos documentos e PDFs dos orçamentos.</p>
@@ -141,7 +141,7 @@ export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mo
             <p style={{ color: secundaria, fontSize: 12 }}>Catálogo atual: {produtos.length} produtos. Seus produtos e clientes não serão alterados.</p>
             <button type="submit" disabled={salvando} style={{ border: 0, borderRadius: 11, background: salvando ? '#9ca3af' : '#F05A28', color: '#fff', padding: '13px 22px', fontWeight: 800, fontSize: 14, cursor: salvando ? 'wait' : 'pointer' }}>{salvando ? 'Salvando…' : 'Salvar configurações'}</button>
           </div>
-        </form>
+        </form> : <div style={{ marginTop: 22, border: `1px solid ${linha}`, borderRadius: 16, background: fundo, padding: 22 }}><h2 style={{ fontSize: 18, fontWeight: 800 }}>Recursos PRO</h2><p style={{ color: secundaria, fontSize: 14, lineHeight: 1.6, marginTop: 8 }}>O cadastro do nome da empresa, telefone, demais dados comerciais e logotipo é exclusivo para clientes PRO. Ative sua licença PRO para liberar esses campos e personalizar seus orçamentos.</p></div>}
       </div>
     </section>
   )
