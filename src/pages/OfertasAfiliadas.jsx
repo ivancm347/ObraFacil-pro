@@ -154,7 +154,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
         <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} style={{ ...campo, marginTop: 6 }}>{categorias.map(c => <option key={c}>{c}</option>)}</select>
       </label>
       <label style={{ fontSize: 12, fontWeight: 700 }}>Link de afiliado (opcional)
-        <input type="url" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} placeholder="https://..." style={{ ...campo, marginTop: 6 }} />
+        <input type="text" inputMode="url" autoComplete="url" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} placeholder="Opcional — https://..." style={{ ...campo, marginTop: 6 }} />
       </label>
       <label style={{ fontSize: 12, fontWeight: 700 }}>Escolher imagem do celular (opcional)
         <input type="file" accept="image/*" onChange={e => setArquivoImagem(e.target.files?.[0] || null)} style={{ ...campo, marginTop: 6 }} />
