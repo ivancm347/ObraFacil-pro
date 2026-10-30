@@ -163,6 +163,27 @@ export default function Orcamentos({
     mostrarNotificacao('Adiantamento registrado no histórico.')
   }
 
+  const registrarAdiantamentoNaEdicao = () => {
+    if (modoModal !== 'editar' || !form.id) return
+    const valor = Number(String(adiantamentoValor).replace(',', '.'))
+    if (!Number.isFinite(valor) || valor <= 0) { mostrarNotificacao('Informe um valor de adiantamento maior que zero.'); return }
+    const total = calcularTotal(form.itens)
+    const legado = Math.max(0, Number(form.adiantamento) || 0)
+    const entradas = Array.isArray(form.adiantamentos) ? form.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0
+    const pagamentos = Array.isArray(form.pagamentos) ? form.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0
+    const saldo = Math.max(0, total - Math.min(total, legado + entradas + pagamentos))
+    if (valor > saldo + 0.00001) { mostrarNotificacao(`O adiantamento não pode passar do saldo de ${formatarMoeda(saldo)}.`); return }
+    const registro = { id: `adi-${Date.now()}`, data: adiantamentoData || new Date().toISOString().slice(0, 10), valor: Math.round(valor * 100) / 100, motivo: adiantamentoMotivo, observacao: adiantamentoObs.trim() }
+    const atualizada = { ...form, adiantamentos: [...(Array.isArray(form.adiantamentos) ? form.adiantamentos : []), registro] }
+    const novoSaldo = Math.max(0, total - Math.min(total, legado + entradas + pagamentos + registro.valor))
+    atualizada.saldoRestante = novoSaldo
+    setForm(atualizada)
+    setOrcamentos(orcamentos.map(o => o.id === atualizada.id ? atualizada : o))
+    setAdiantamentoValor('')
+    setAdiantamentoObs('')
+    mostrarNotificacao('Adiantamento registrado no orçamento.')
+  }
+
   const registrarPagamento = () => {
     if (!orcamentoSelecionado) return
     const valor = Number(String(pagamentoValor).replace(',', '.'))
@@ -572,6 +593,22 @@ export default function Orcamentos({
                 </div>
               )}
             </div>
+
+            {modoModal === 'editar' && (
+              <section style={{ marginTop: 18, padding: 16, borderRadius: 14, background: temaEscuro ? '#172554' : '#eff6ff', border: '1px solid #93c5fd' }}>
+                <strong style={{ display: 'block', marginBottom: 8 }}>Registrar novo adiantamento</strong>
+                <p style={{ margin: '0 0 10px', fontSize: 12, opacity: .75 }}>Registre uma nova entrada sem apagar os adiantamentos anteriores. O histórico continuará disponível em Ver orçamento.</p>
+                {(form.adiantamentos || []).length > 0 && <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>{form.adiantamentos.map((a, i) => <div key={a.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}><span>{a.data ? new Date(`${a.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'} · {a.motivo || 'Adiantamento'}</span><strong>{formatarMoeda(a.valor)}</strong></div>)}</div>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'end' }}>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Data</label><input type="date" value={adiantamentoData} onChange={e => setAdiantamentoData(e.target.value)} style={inputStyle()} /></div>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Valor (R$)</label><input type="number" min="0.01" step="0.01" value={adiantamentoValor} onChange={e => setAdiantamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="0,00" style={inputStyle()} /></div>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Motivo</label><select value={adiantamentoMotivo} onChange={e => setAdiantamentoMotivo(e.target.value)} style={inputStyle()}>{['Compra de material','Início da obra','Mão de obra','Equipamentos','Outra finalidade'].map(x => <option key={x}>{x}</option>)}</select></div>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Observação</label><input value={adiantamentoObs} onChange={e => setAdiantamentoObs(e.target.value)} placeholder="Detalhe (opcional)" style={inputStyle()} /></div>
+                  <button type="button" onClick={registrarAdiantamentoNaEdicao} style={{ padding: '12px 14px', border: 0, borderRadius: 10, background: '#2563eb', color: '#fff', fontWeight: 700, minHeight: 44 }}>+ Registrar adiantamento</button>
+                </div>
+                <div style={{ marginTop: 10, fontSize: 12 }}>Saldo disponível para adiantamento: <strong>{formatarMoeda(Math.max(0, calcularTotal(form.itens) - Math.min(calcularTotal(form.itens), (Number(form.adiantamento) || 0) + (form.adiantamentos || []).reduce((s, a) => s + (Number(a.valor) || 0), 0) + (form.pagamentos || []).reduce((s, p) => s + (Number(p.valor) || 0), 0))))}</strong></div>
+              </section>
+            )}
 
             <div style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f0fdf4', border: '1px solid #86efac' }}>
               <label style={{ ...labelStyle, marginTop: 0, opacity: 1, color: temaEscuro ? '#86efac' : '#166534' }}>Valor adiantado / entrada (R$)</label>
