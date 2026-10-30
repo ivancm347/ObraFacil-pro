@@ -58,7 +58,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   ]
   const btn = (id) => setPagina && setPagina(id)
   return <div style={{ color: text, paddingBottom: 92 }}>
-    <style>{`@keyframes ofade { from { opacity:0; transform:translateY(7px) } to {opacity:1;transform:translateY(0)} } .of-card { transition:transform .18s, box-shadow .18s; } .of-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(20,35,60,.09)!important; } .of-action:hover { filter:brightness(.98); transform:translateY(-1px); } @media(max-width:560px){.of-hero{padding:22px!important}.of-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-stat-value{font-size:21px!important}}`}</style>
+    <style>{`@keyframes ofade { from { opacity:0; transform:translateY(7px) } to {opacity:1;transform:translateY(0)} } .of-card { transition:transform .18s, box-shadow .18s; } .of-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(20,35,60,.09)!important; } .of-action:hover { filter:brightness(.98); transform:translateY(-1px); } @media(max-width:640px){.of-offer-content{grid-template-columns:minmax(0,1fr)!important;padding:14px!important;gap:14px!important}.of-offer-content h2{font-size:19px!important}.of-offer-content .of-offer-image{height:180px!important}} @media(max-width:560px){.of-hero{padding:22px!important}.of-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-stat-value{font-size:21px!important}}`}</style>
     <section className="of-hero" style={{ background: 'linear-gradient(120deg,#111c31 0%,#1c3150 65%,#f05a28 155%)', borderRadius: 24, padding: '30px 32px', color: '#fff', position: 'relative', overflow: 'hidden', marginBottom: 24, animation: 'ofade .35s ease-out' }}>
       <div style={{ position: 'absolute', right: -24, top: -50, width: 220, height: 220, borderRadius: '50%', border: '34px solid rgba(255,255,255,.045)' }} />
       <div style={{ position: 'absolute', right: 48, bottom: -80, width: 170, height: 170, borderRadius: '50%', background: 'rgba(240,90,40,.12)' }} />
@@ -84,9 +84,9 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null
         const mp4 = /\.mp4(?:$|[?#])/i.test(v)
         const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&mute=1&playsinline=1' : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=1&muted=1' : vmId ? 'https://player.vimeo.com/video/' + vmId + '?autoplay=1&muted=1&playsinline=1' : ''
-        return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 180px) minmax(0,1fr)', gap: 14, padding: 14, alignItems: 'center' }}>
+        return <div className="of-offer-content" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 360px) minmax(0,1fr)', gap: 22, padding: 22, alignItems: 'center' }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ height: 130, borderRadius: 10, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
+            <div className="of-offer-image" style={{ height: 190, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
               {oferta.link_imagem ? <img src={oferta.link_imagem} alt={oferta.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
             </div>
             {v && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden', marginTop: 8 }}>
@@ -95,10 +95,10 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
           </div>
           <div style={{ minWidth: 0 }}>
             <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{oferta.categoria || 'Oferta especial'}</span>
-            <h2 style={{ margin: '7px 0', fontSize: 17, lineHeight: 1.25, fontWeight: 900 }}>{oferta.nome}</h2>
-            {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 12, lineHeight: 1.5 }}>{oferta.descricao_curta}</p>}
-            {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 19, fontWeight: 900, margin: '6px 0 8px' }}>{money(oferta.preco, formatarMoeda)}</div>}
-            {oferta.link_afiliado && <a href={oferta.link_afiliado} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '9px 13px', fontWeight: 900, fontSize: 12 }}>VER OFERTA ↗</a>}
+            <h2 style={{ margin: '7px 0', fontSize: 22, lineHeight: 1.25, fontWeight: 900 }}>{oferta.nome}</h2>
+            {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 15, lineHeight: 1.6 }}>{oferta.descricao_curta}</p>}
+            {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 25, fontWeight: 900, margin: '8px 0 12px' }}>{money(oferta.preco, formatarMoeda)}</div>}
+            {oferta.link_afiliado && <a href={oferta.link_afiliado} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '12px 18px', fontWeight: 900, fontSize: 14 }}>VER OFERTA ↗</a>}
           </div>
         </div>
       })()}
