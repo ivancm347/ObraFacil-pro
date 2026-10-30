@@ -86,10 +86,10 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&mute=1&playsinline=1' : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=1&muted=1' : vmId ? 'https://player.vimeo.com/video/' + vmId + '?autoplay=1&muted=1&playsinline=1' : ''
         return <div className="of-offer-content" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 360px) minmax(0,1fr)', gap: 22, padding: 22, alignItems: 'center' }}>
           <div style={{ minWidth: 0 }}>
-            <div className="of-offer-image" style={{ height: 190, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
+            {(oferta.link_imagem || !v) && <div className="of-offer-image" style={{ height: 190, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
               {oferta.link_imagem ? <img src={oferta.link_imagem} alt={oferta.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
-            </div>
-            {v && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden', marginTop: 8 }}>
+            </div>}
+            {v && <div style={{ width: '100%', aspectRatio: '16 / 9', background: '#000', borderRadius: 9, overflow: 'hidden', marginTop: 0 }}>
               {videoSrc ? <iframe src={videoSrc} title={'Vídeo de ' + oferta.nome} loading="lazy" allow="autoplay; accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} /> : mp4 ? <video src={v} controls autoPlay muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'grid', placeItems: 'center', width: '100%', height: '100%', textDecoration: 'none', fontWeight: 800 }}>▶ Assistir vídeo</a>}
             </div>}
           </div>
