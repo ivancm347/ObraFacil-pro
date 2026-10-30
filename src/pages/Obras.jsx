@@ -213,7 +213,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(135px,1fr))', gap: 10 }}>
               {[
                 { label: 'Contratado', valor: Number(financeiroObra.valor || 0), cor: '#2563eb' },
-                { label: 'Adiantamento', valor: Number(financeiroObra.adiantamento || 0), cor: '#7c3aed' },
+                { label: 'Adiantamento', valor: pagamentosDaObra(financeiroObra).adiantamento, cor: '#7c3aed' },
                 { label: 'Recebido total', valor: recebidoObra(financeiroObra), cor: '#16a34a' },
                 { label: 'Falta receber', valor: saldoReceber(financeiroObra), cor: '#d97706' },
                 { label: 'Despesas lançadas', valor: despesasObra(financeiroObra), cor: '#dc2626' },
