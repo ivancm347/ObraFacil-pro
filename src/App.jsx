@@ -444,7 +444,7 @@ export default function App() {
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
         {pagina === 'ofertas' && isAdmin && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'gerenciar-clientes' && isAdmin && <GerenciarClientes {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
-        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta } } />}
+        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro, isAdmin } } />}
       </main>
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `1px solid ${border}`, borderRadius: 16, display: 'flex', padding: 6, gap: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
         <style>{` nav::-webkit-scrollbar { display: none; } @media (max-width: 400px) { nav button { padding: 10px 12px !important; font-size: 12px !important; } } `}</style>
