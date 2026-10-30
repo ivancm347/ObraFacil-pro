@@ -224,7 +224,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
               <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>Registrar lançamento</h3>
               <form onSubmit={registrarLancamento} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(145px,1fr))', gap: 10 }}>
                 <select value={tipoLancamento} onChange={e => setTipoLancamento(e.target.value)} style={inputStyle}><option value="pagamento" disabled={!!orcamentoDaObra(financeiroObra)}>Pagamento recebido{orcamentoDaObra(financeiroObra) ? ' (registrar no orçamento)' : ''}</option><option value="despesa">Despesa da obra</option></select>
-                <input required type="number" min="0.01" step="0.01" value={lancamentoValor} onChange={e => setLancamentoValor(e.target.value)} placeholder="Valor R$" style={inputStyle} />
+                <input required type="number" min="0.01" step="0.01" value={lancamentoValor} onChange={e => setLancamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="Valor R$" style={inputStyle} />
                 <input type="date" value={lancamentoData} onChange={e => setLancamentoData(e.target.value)} style={inputStyle} />
                 <input value={lancamentoDescricao} onChange={e => setLancamentoDescricao(e.target.value)} placeholder="Descrição (opcional)" style={inputStyle} />
                 <button type="submit" style={{ border: 0, borderRadius: 10, background: '#f05a28', color: '#fff', fontWeight: 800, padding: 11, cursor: 'pointer' }}>＋ Registrar</button>
@@ -257,8 +257,8 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
               <div><label style={labelStyle}>Orçamento (1 orçamento = 1 obra)</label><select value={form.orcamentoId} onChange={e => handleOrcamentoChange(e.target.value)} style={inputStyle}><option value="">Sem vínculo</option>{orcamentosDoCliente.map(o => { const usado = obras.find(ob => ob.orcamentoId === o.id && ob.id !== editando); return <option key={o.id} value={o.id} disabled={!!usado}>{o.numero || o.id.slice(0,8)} - {moeda(o.valor || o.total)} {usado ? `(já usado em: ${usado.nome})` : ''}</option> })}</select></div>
               <div><label style={labelStyle}>Endereço</label><input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} style={inputStyle} /></div>
               <div><label style={labelStyle}>Status</label><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={inputStyle}>{['Planejada', 'Em andamento', 'Pausada', 'Concluída'].map(v => <option key={v}>{v}</option>)}</select></div>
-              <div><label style={labelStyle}>Valor (do orçamento)</label><input type="number" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} style={{ ...inputStyle, borderColor: form.orcamentoId ? '#16a34a' : borda }} /></div>
-              <div><label style={labelStyle}>Custo estimado</label><input type="number" value={form.custo} onChange={e => setForm({ ...form, custo: e.target.value })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>Valor (do orçamento)</label><input type="number" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} onFocus={e => e.currentTarget.select()} style={{ ...inputStyle, borderColor: form.orcamentoId ? '#16a34a' : borda }} /></div>
+              <div><label style={labelStyle}>Custo estimado</label><input type="number" value={form.custo} onChange={e => setForm({ ...form, custo: e.target.value })} onFocus={e => e.currentTarget.select()} style={inputStyle} /></div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 9, marginTop: 22 }}>
               <button type="button" onClick={() => setModal(false)} style={{ padding: '11px 15px', border: `1px solid ${borda}`, borderRadius: 10, background: 'transparent', cursor: 'pointer' }}>Cancelar</button>
