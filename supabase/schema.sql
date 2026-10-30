@@ -182,3 +182,64 @@ $$;
 revoke all on function public.obrafacil_tem_licenca() from public;
 grant execute on function public.obrafacil_tem_licenca() to authenticated;
 notify pgrst, 'reload schema';
+
+ 
+-- OBRAFACIL PRO: painel administrativo de clientes e licenças.
+-- Execute este bloco depois que a conta administradora já existir no Auth.
+insert into public.obrafacil_admins (user_id)
+select id from auth.users where lower(email) = 'ivancm347@gmail.com'
+on conflict (user_id) do nothing;
+
+create or replace function public.obrafacil_listar_clientes()
+returns table (
+  user_id uuid,
+  email text,
+  criado_em timestamptz,
+  status text,
+  expira_em timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.obrafacil_e_admin() then
+    raise exception 'Acesso restrito ao administrador.';
+  end if;
+
+  return query
+  select u.id, u.email::text, u.created_at,
+         coalesce(l.status, 'gratuito')::text, l.expira_em
+  from auth.users u
+  left join public.obrafacil_licencas l on l.user_id = u.id
+  order by u.created_at desc;
+end;
+$$;
+revoke all on function public.obrafacil_listar_clientes() from public;
+grant execute on function public.obrafacil_listar_clientes() to authenticated;
+
+create or replace function public.obrafacil_definir_licenca(p_user_id uuid, p_ativo boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.obrafacil_e_admin() then
+    raise exception 'Acesso restrito ao administrador.';
+  end if;
+  if p_user_id is null or not exists (select 1 from auth.users where id = p_user_id) then
+    raise exception 'Cliente não encontrado.';
+  end if;
+
+  insert into public.obrafacil_licencas (user_id, status, expira_em, atualizado_em)
+  values (p_user_id, case when p_ativo then 'ativo' else 'cancelado' end, null, now())
+  on conflict (user_id) do update
+    set status = excluded.status, expira_em = null, atualizado_em = now();
+end;
+$$;
+revoke all on function public.obrafacil_definir_licenca(uuid, boolean) from public;
+grant execute on function public.obrafacil_definir_licenca(uuid, boolean) to authenticated;
+
+notify pgrst, 'reload schema';
