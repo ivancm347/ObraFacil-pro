@@ -12,7 +12,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     if (ofertasDestaque.length < 2) return
     const intervalo = setInterval(() => {
       setIndiceOferta(i => (i + 1) % ofertasDestaque.length)
-    }, 4000)
+    }, 10000)
     return () => clearInterval(intervalo)
   }, [ofertasDestaque.length])
   useEffect(() => {
