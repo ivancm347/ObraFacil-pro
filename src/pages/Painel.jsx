@@ -77,7 +77,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>
     </section>
 
-    {ofertasDestaque.length > 0 && <section style={{ ...panel, overflow: 'hidden', maxWidth: 1100, width: '100%', margin: '0 auto 20px', border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
+    {ofertasDestaque.length > 0 && <section style={{ ...panel, overflow: 'hidden', maxWidth: 900, width: '100%', margin: '0 auto 20px', border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
       <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>🛍️ OFERTAS SELECIONADAS</span><span>{indiceOferta + 1} / {ofertasDestaque.length}</span>
       </div>
@@ -91,7 +91,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         const vmId = host.endsWith('vimeo.com') ? path.match(/\/(\d+)/)?.[1] : null
         const mp4 = /\.mp4(?:$|[?#])/i.test(v)
         const videoSrc = ytId ? 'https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&mute=1&playsinline=1' : ttId ? 'https://www.tiktok.com/player/v1/' + ttId + '?autoplay=1&muted=1' : vmId ? 'https://player.vimeo.com/video/' + vmId + '?autoplay=1&muted=1&playsinline=1' : ''
-        return <div className="of-offer-content" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 360px) minmax(0,1fr)', gap: 22, padding: 22, alignItems: 'center', justifyContent: 'center' }}>
+        return <div className="of-offer-content" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 22, alignItems: 'center', textAlign: 'center' }}>
           <div style={{ minWidth: 0 }}>
             {(oferta.link_imagem || !v) && <div className="of-offer-image" style={{ height: 190, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
               {oferta.link_imagem ? <img src={oferta.link_imagem} alt={oferta.nome} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
@@ -105,7 +105,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
             <h2 style={{ margin: '7px 0', fontSize: 22, lineHeight: 1.25, fontWeight: 900 }}>{oferta.nome}</h2>
             {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 15, lineHeight: 1.6 }}>{oferta.descricao_curta}</p>}
             {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 25, fontWeight: 900, margin: '8px 0 12px' }}>{money(oferta.preco, formatarMoeda)}</div>}
-            {oferta.link_afiliado && <a href={oferta.link_afiliado} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '12px 18px', fontWeight: 900, fontSize: 14 }}>VER OFERTA ↗</a>}
+            {oferta.link_afiliado ? <a href={oferta.link_afiliado} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '13px 24px', fontWeight: 900, fontSize: 15, marginTop: 4 }}>VER OFERTA / COMPRAR ↗</a> : <button type="button" onClick={() => btn('ofertas')} style={{ display: 'inline-block', border: 0, textAlign: 'center', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '13px 24px', fontWeight: 900, fontSize: 14, marginTop: 4, cursor: 'pointer' }}>CADASTRAR LINK DE COMPRA</button>}
           </div>
         </div>
       })()}
