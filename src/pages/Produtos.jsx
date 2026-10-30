@@ -292,7 +292,7 @@ export default function Produtos({ produtos, setProdutos, mostrarNotificacao, fo
               </div>
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>Preço (R$) *</label>
-                <input type="number" step="0.01" value={form.preco} onChange={e => setForm({ ...form, preco: e.target.value })} placeholder="0,00" style={inputStyle(temaEscuro)} />
+                <input type="number" step="0.01" value={form.preco} onChange={e => setForm({ ...form, preco: e.target.value })} onFocus={e => e.currentTarget.select()} placeholder="0,00" style={inputStyle(temaEscuro)} />
               </div>
             </div>
 
