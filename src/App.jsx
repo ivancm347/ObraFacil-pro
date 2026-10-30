@@ -376,7 +376,7 @@ export default function App() {
     try {
       const resultado = modoAuth === 'login'
         ? await supabase.auth.signInWithPassword({ email: email.trim(), password: senha })
-        : await supabase.auth.signUp({ email: email.trim(), password: senha })
+        : await supabase.auth.signUp({ email: email.trim(), password: senha, options: { emailRedirectTo: 'https://ivancm347.github.io/ObraFacil-pro/' } })
 
       if (resultado.error) {
         setAuthErro(resultado.error.message === 'Invalid login credentials'
