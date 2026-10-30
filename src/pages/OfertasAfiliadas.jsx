@@ -89,7 +89,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
     }
     const video = form.video.trim();
     if (video) { try { const videoUrl = new URL(video); if (!['https:', 'http:'].includes(videoUrl.protocol)) throw new Error(); } catch { mostrarNotificacao('Digite um link de vídeo válido começando com https://'); return } }
-    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_video: video || null, link_afiliado: url ? url.href : null, publicada: true }
+    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_video: video || null, link_afiliado: url ? url.href : '', publicada: true }
     const { error: eSalvar } = await supabase.from('ofertas').insert(registro)
     if (eSalvar) { setErro('Não foi possível publicar: ' + eSalvar.message); return }
     setForm({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', video: '', link: '' })
