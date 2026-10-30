@@ -91,19 +91,37 @@ export default function Orcamentos({
   }
 
   const alterarQuantidadeItem = (index, novaQtd) => {
-    const qtd = Math.max(0.1, Number(novaQtd) || 1)
     const novosItens = [...form.itens]
+    const qtd = novaQtd === '' ? '' : Math.max(0.1, Number(novaQtd) || 0)
     novosItens[index].quantidade = qtd
-    novosItens[index].subtotal = novosItens[index].precoUnitario * qtd
+    novosItens[index].subtotal = novosItens[index].precoUnitario * (Number(qtd) || 0)
     setForm({ ...form, itens: novosItens })
   }
 
-  const alterarPrecoItem = (index, novoPreco) => {
-    const preco = Number(novoPreco) || 0
+  const finalizarQuantidadeItem = (index) => {
     const novosItens = [...form.itens]
+    if (novosItens[index].quantidade === '' || Number(novosItens[index].quantidade) < 0.1) {
+      novosItens[index].quantidade = 1
+      novosItens[index].subtotal = novosItens[index].precoUnitario
+      setForm({ ...form, itens: novosItens })
+    }
+  }
+
+  const alterarPrecoItem = (index, novoPreco) => {
+    const novosItens = [...form.itens]
+    const preco = novoPreco === '' ? '' : Math.max(0, Number(novoPreco) || 0)
     novosItens[index].precoUnitario = preco
-    novosItens[index].subtotal = preco * novosItens[index].quantidade
+    novosItens[index].subtotal = (Number(preco) || 0) * (Number(novosItens[index].quantidade) || 0)
     setForm({ ...form, itens: novosItens })
+  }
+
+  const finalizarPrecoItem = (index) => {
+    const novosItens = [...form.itens]
+    if (novosItens[index].precoUnitario === '') {
+      novosItens[index].precoUnitario = 0
+      novosItens[index].subtotal = 0
+      setForm({ ...form, itens: novosItens })
+    }
   }
 
   const removerItem = (index) => {
@@ -397,7 +415,7 @@ export default function Orcamentos({
               {calcularSaldo(orcamentoSelecionado) > 0.009 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, alignItems: 'end' }}>
                   <div><label style={{ ...labelStyle, marginTop: 0 }}>Data do pagamento</label><input type="date" value={pagamentoData} onChange={e => setPagamentoData(e.target.value)} style={inputStyle()} /></div>
-                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Valor recebido (R$)</label><input type="number" min="0.01" step="0.01" max={calcularSaldo(orcamentoSelecionado)} value={pagamentoValor} onChange={e => setPagamentoValor(e.target.value)} placeholder="0,00" style={inputStyle()} /></div>
+                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Valor recebido (R$)</label><input type="number" min="0.01" step="0.01" max={calcularSaldo(orcamentoSelecionado)} value={pagamentoValor} onChange={e => setPagamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="0,00" style={inputStyle()} /></div>
                   <div><label style={{ ...labelStyle, marginTop: 0 }}>Observação</label><input value={pagamentoObs} onChange={e => setPagamentoObs(e.target.value)} placeholder="Ex.: 2ª parcela" style={inputStyle()} /></div>
                   <button onClick={registrarPagamento} style={{ padding: '12px 14px', border: 0, borderRadius: 10, background: '#16a34a', color: '#fff', fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Registrar pagamento</button>
                 </div>
@@ -467,7 +485,7 @@ export default function Orcamentos({
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1', minWidth: '90px' }}>
                   <label style={{ ...labelStyle, marginTop: 0, fontSize: '10px' }}>QTD</label>
-                  <input type="number" min="0.1" step="0.1" value={itemQuantidade} onChange={e => setItemQuantidade(e.target.value)} placeholder="Ex: 10" style={inputStyle()} />
+                  <input type="number" min="0.1" step="0.1" value={itemQuantidade} onChange={e => setItemQuantidade(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="Ex: 10" style={inputStyle()} />
                 </div>
                 <div style={{ flex: '0.7', minWidth: '70px' }}>
                   <label style={{ ...labelStyle, marginTop: 0, fontSize: '10px' }}>UNIDADE</label>
@@ -501,7 +519,7 @@ export default function Orcamentos({
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '75px' }}>
                         <label style={{ fontSize: '9px', fontWeight: 700, opacity: 0.6, textAlign: 'center' }}>QTD</label>
-                        <input type="number" value={item.quantidade} onChange={e => alterarQuantidadeItem(i, e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1.5px solid #d0d7e2', textAlign: 'center', fontWeight: 700 }} />
+                        <input type="number" value={item.quantidade} onChange={e => alterarQuantidadeItem(i, e.target.value)} onFocus={e => e.currentTarget.select()} onBlur={() => finalizarQuantidadeItem(i)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1.5px solid #d0d7e2', textAlign: 'center', fontWeight: 700 }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '60px' }}>
                         <label style={{ fontSize: '9px', fontWeight: 700, opacity: 0.6, textAlign: 'center' }}>UNID.</label>
@@ -509,7 +527,7 @@ export default function Orcamentos({
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '105px' }}>
                         <label style={{ fontSize: '9px', fontWeight: 700, opacity: 0.6, textAlign: 'center' }}>PREÇO UNIT.</label>
-                        <input type="number" value={item.precoUnitario} onChange={e => alterarPrecoItem(i, e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1.5px solid #d0d7e2', textAlign: 'right' }} />
+                        <input type="number" value={item.precoUnitario} onChange={e => alterarPrecoItem(i, e.target.value)} onFocus={e => e.currentTarget.select()} onBlur={() => finalizarPrecoItem(i)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1.5px solid #d0d7e2', textAlign: 'right' }} />
                       </div>
                       <div style={{ minWidth: '90px', textAlign: 'right' }}>
                         <div style={{ fontSize: '9px', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase' }}>Subtotal</div>
