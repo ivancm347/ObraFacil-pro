@@ -70,16 +70,16 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
 
     {ofertaDestaque && <section style={{ ...panel, overflow: 'hidden', marginBottom: 20, border: '1px solid #fed7aa', background: dark ? '#1b293c' : '#fffaf5' }}>
       <div style={{ padding: '13px 18px', background: 'linear-gradient(90deg,#f05a28,#fb923c)', color: '#fff', fontSize: 12, fontWeight: 900, letterSpacing: '.7px' }}>🛍️ OFERTA EM DESTAQUE</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, padding: 16, alignItems: 'center' }}>
-        <div style={{ height: 180, borderRadius: 12, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
-          {ofertaDestaque.link_imagem ? <img src={ofertaDestaque.link_imagem} alt={ofertaDestaque.nome || 'Produto em oferta'} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 48 }}>🧰</span>}
+      <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(0,1fr)', gap: 12, padding: 12, alignItems: 'center' }}>
+        <div style={{ height: 110, borderRadius: 10, overflow: 'hidden', background: dark ? '#0f172a' : '#fff', display: 'grid', placeItems: 'center' }}>
+          {ofertaDestaque.link_imagem ? <img src={ofertaDestaque.link_imagem} alt={ofertaDestaque.nome || 'Produto em oferta'} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.style.display = 'none' }} /> : <span style={{ fontSize: 34 }}>🧰</span>}
         </div>
         <div style={{ minWidth: 0 }}>
           <span style={{ color: '#f05a28', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{ofertaDestaque.categoria || 'Oferta especial'}</span>
-          <h2 style={{ margin: '7px 0', fontSize: 20, lineHeight: 1.25, fontWeight: 900 }}>{ofertaDestaque.nome}</h2>
+          <h2 style={{ margin: '7px 0', fontSize: 16, lineHeight: 1.25, fontWeight: 900 }}>{ofertaDestaque.nome}</h2>
           {ofertaDestaque.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 12, lineHeight: 1.5 }}>{ofertaDestaque.descricao_curta}</p>}
-          {ofertaDestaque.preco !== null && ofertaDestaque.preco !== '' && <div style={{ fontSize: 23, fontWeight: 900, margin: '8px 0 12px' }}>{money(ofertaDestaque.preco, formatarMoeda)}</div>}
-          <a href={ofertaDestaque.link_afiliado || '#'} target="_blank" rel="sponsored nofollow noopener noreferrer" onClick={e => { if (!ofertaDestaque.link_afiliado) e.preventDefault() }} style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 10, padding: '12px 17px', fontWeight: 900, fontSize: 13 }}>VER OFERTA ↗</a>
+          {ofertaDestaque.preco !== null && ofertaDestaque.preco !== '' && <div style={{ fontSize: 19, fontWeight: 900, margin: '6px 0 8px' }}>{money(ofertaDestaque.preco, formatarMoeda)}</div>}
+          <a href={ofertaDestaque.link_afiliado || '#'} target="_blank" rel="sponsored nofollow noopener noreferrer" onClick={e => { if (!ofertaDestaque.link_afiliado) e.preventDefault() }} style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '9px 13px', fontWeight: 900, fontSize: 12 }}>VER OFERTA ↗</a>
         </div>
       </div>
     </section>}
