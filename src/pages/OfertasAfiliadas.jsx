@@ -67,10 +67,13 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
   const salvar = async (e) => {
     e.preventDefault()
     if (!admin) { setErro('Somente o administrador pode publicar ofertas.'); return }
-    if (!form.nome.trim() || !form.link.trim()) { mostrarNotificacao('Informe o nome do produto e o link de afiliado.'); return }
-    let url
-    try { url = new URL(form.link.trim()) } catch { mostrarNotificacao('Digite um link válido começando com https://'); return }
-    if (!['https:', 'http:'].includes(url.protocol)) { mostrarNotificacao('Use um endereço web válido.'); return }
+    if (!form.nome.trim()) { mostrarNotificacao('Informe o nome do produto.'); return }
+    if (!form.link.trim() && !form.video.trim()) { mostrarNotificacao('Informe pelo menos um link: de afiliado ou de vídeo.'); return }
+    let url = null
+    if (form.link.trim()) {
+      try { url = new URL(form.link.trim()) } catch { mostrarNotificacao('Digite um link de afiliado válido começando com https://'); return }
+      if (!['https:', 'http:'].includes(url.protocol)) { mostrarNotificacao('Use um endereço web válido para o link de afiliado.'); return }
+    }
     setErro('')
     let imagemFinal = form.imagem.trim() || null
     if (arquivoImagem) {
@@ -86,7 +89,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
     }
     const video = form.video.trim();
     if (video) { try { const videoUrl = new URL(video); if (!['https:', 'http:'].includes(videoUrl.protocol)) throw new Error(); } catch { mostrarNotificacao('Digite um link de vídeo válido começando com https://'); return } }
-    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_video: video || null, link_afiliado: url.href, publicada: true }
+    const registro = { nome: form.nome.trim(), descricao_curta: form.descricao.trim() || null, preco: form.preco === '' ? null : Number(form.preco), categoria: form.categoria, link_imagem: imagemFinal, link_video: video || null, link_afiliado: url ? url.href : null, publicada: true }
     const { error: eSalvar } = await supabase.from('ofertas').insert(registro)
     if (eSalvar) { setErro('Não foi possível publicar: ' + eSalvar.message); return }
     setForm({ nome: '', descricao: '', preco: '', categoria: 'Ferramentas', imagem: '', video: '', link: '' })
@@ -150,8 +153,8 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
       <label style={{ fontSize: 12, fontWeight: 700 }}>Categoria
         <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} style={{ ...campo, marginTop: 6 }}>{categorias.map(c => <option key={c}>{c}</option>)}</select>
       </label>
-      <label style={{ fontSize: 12, fontWeight: 700 }}>Link de afiliado *
-        <input required type="url" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} placeholder="https://..." style={{ ...campo, marginTop: 6 }} />
+      <label style={{ fontSize: 12, fontWeight: 700 }}>Link de afiliado (opcional)
+        <input type="url" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} placeholder="https://..." style={{ ...campo, marginTop: 6 }} />
       </label>
       <label style={{ fontSize: 12, fontWeight: 700 }}>Escolher imagem do celular (opcional)
         <input type="file" accept="image/*" onChange={e => setArquivoImagem(e.target.files?.[0] || null)} style={{ ...campo, marginTop: 6 }} />
@@ -201,7 +204,7 @@ export default function OfertasAfiliadas({ temaEscuro, cardBg, border, mostrarNo
             })()}
           </div>}
           {moeda(o.preco) && <strong style={{ fontSize: 16 }}>{moeda(o.preco)}</strong>}
-          <a href={o.link} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#F05A28', color: '#fff', borderRadius: 9, padding: '9px 8px', fontWeight: 800, fontSize: 12, marginTop: 'auto' }}>Ver oferta ↗</a>
+          {o.link && <a href={o.link} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#F05A28', color: '#fff', borderRadius: 9, padding: '9px 8px', fontWeight: 800, fontSize: 12, marginTop: 'auto' }}>Ver oferta ↗</a>}
           {admin && <button type="button" onClick={() => remover(o.id)} style={{ border: `1px solid ${border}`, background: 'transparent', color: texto, borderRadius: 9, padding: 8, cursor: 'pointer', fontSize: 11 }}>Remover da vitrine</button>}
         </div>
       </article>)}
