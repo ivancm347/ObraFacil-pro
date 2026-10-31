@@ -66,15 +66,31 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   ]
   const btn = (id) => setPagina && setPagina(id)
   return <div style={{ color: text, paddingBottom: 92 }}>
-    <style>{`@keyframes ofade { from { opacity:0; transform:translateY(7px) } to {opacity:1;transform:translateY(0)} } .of-card { transition:transform .18s, box-shadow .18s; } .of-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(20,35,60,.09)!important; } .of-action:hover { filter:brightness(.98); transform:translateY(-1px); } @media(max-width:640px){.of-offer-content{flex-direction:column!important;padding:14px!important;gap:14px!important}.of-offer-content>div{width:100%!important;flex-basis:auto!important}.of-offer-content h2{font-size:19px!important}.of-offer-content .of-offer-image{height:180px!important}} @media(max-width:560px){.of-hero{padding:22px!important}.of-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-stat-value{font-size:21px!important}}`}</style>
+    <style>{`@keyframes ofade { from { opacity:0; transform:translateY(7px) } to {opacity:1;transform:translateY(0)} } .of-card { transition:transform .18s, box-shadow .18s; } .of-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(20,35,60,.09)!important; } .of-action:hover { filter:brightness(.98); transform:translateY(-1px); } @media(max-width:640px){.of-hero-inner{align-items:flex-start!important}.of-hero-features{flex-basis:42%!important}@media(max-width:760px){.of-hero-inner{flex-direction:column!important}.of-hero-inner>div{width:100%!important;flex-basis:auto!important}.of-hero-features{grid-template-columns:repeat(2,minmax(0,1fr))!important}} .of-offer-content{flex-direction:column!important;padding:14px!important;gap:14px!important}.of-offer-content>div{width:100%!important;flex-basis:auto!important}.of-offer-content h2{font-size:19px!important}.of-offer-content .of-offer-image{height:180px!important}} @media(max-width:560px){.of-hero{padding:22px!important}.of-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.of-stat-value{font-size:21px!important}}`}</style>
     <section className="of-hero" style={{ background: 'linear-gradient(120deg,#111c31 0%,#1c3150 65%,#f05a28 155%)', borderRadius: 24, padding: '30px 32px', color: '#fff', position: 'relative', overflow: 'hidden', marginBottom: 24, animation: 'ofade .35s ease-out' }}>
       <div style={{ position: 'absolute', right: -24, top: -50, width: 220, height: 220, borderRadius: '50%', border: '34px solid rgba(255,255,255,.045)' }} />
       <div style={{ position: 'absolute', right: 48, bottom: -80, width: 170, height: 170, borderRadius: '50%', background: 'rgba(240,90,40,.12)' }} />
-      <div style={{ position: 'relative', maxWidth: 640 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: '#ffb18e', marginBottom: 12 }}>CENTRAL DE GESTÃO</div>
-        <h1 style={{ fontFamily: "'Sora',sans-serif", fontSize: 'clamp(24px,4vw,34px)', lineHeight: 1.18, margin: '0 0 10px', letterSpacing: '-1px' }}>Sua obra, seus números.<br/>Tudo sob controle.</h1>
-        <p style={{ margin: '0 0 22px', fontSize: 14, lineHeight: 1.7, color: '#d2dbea', maxWidth: 480 }}>Acompanhe seus orçamentos, clientes, produtos e obras em um só lugar.</p>
-        <button onClick={() => btn('orcamentos')} className="of-action" style={{ border: 0, borderRadius: 11, padding: '12px 17px', background: '#f05a28', color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, boxShadow: '0 6px 18px rgba(240,90,40,.25)' }}>＋ Criar orçamento <span style={{ fontSize: 18 }}>↗</span></button>
+      <div className="of-hero-inner" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+        <div style={{ flex: '1 1 48%', minWidth: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: '#ffb18e', marginBottom: 12 }}>CENTRAL DE GESTÃO</div>
+          <h1 style={{ fontFamily: "'Sora',sans-serif", fontSize: 'clamp(24px,4vw,34px)', lineHeight: 1.18, margin: '0 0 10px', letterSpacing: '-1px' }}>Sua obra, seus números.<br/>Tudo sob controle.</h1>
+          <p style={{ margin: '0 0 22px', fontSize: 14, lineHeight: 1.7, color: '#d2dbea', maxWidth: 480 }}>Acompanhe seus orçamentos, clientes, produtos e obras em um só lugar.</p>
+          <button onClick={() => btn('orcamentos')} className="of-action" style={{ border: 0, borderRadius: 11, padding: '12px 17px', background: '#f05a28', color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, boxShadow: '0 6px 18px rgba(240,90,40,.25)' }}>＋ Criar orçamento <span style={{ fontSize: 18 }}>↗</span></button>
+        </div>
+        <div className="of-hero-features" style={{ flex: '1 1 44%', display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
+          {[
+            { icon: 'package', title: 'Produtos', desc: 'Cadastre itens e preços.' },
+            { icon: 'users', title: 'Clientes', desc: 'Organize seus contatos.' },
+            { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas.' },
+            { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços.' },
+            { icon: 'wallet', title: 'Financeiro', desc: 'Veja recebido e a receber.' },
+            { icon: 'file', title: 'Relatórios', desc: 'Confira os indicadores.' },
+          ].map(item => <button key={item.title} type="button" onClick={() => setFuncionalidadeAberta({ ...item, detalhe: item.title === 'Produtos' ? 'Cadastre materiais e produtos com nome, código, unidade e preço para utilizá-los nos orçamentos.' : item.title === 'Clientes' ? 'Registre e organize os dados dos clientes para selecioná-los facilmente ao criar propostas.' : item.title === 'Orçamentos' ? 'Monte propostas com produtos, quantidades e valores, e acompanhe a situação de cada orçamento.' : item.title === 'Obras' ? 'Organize os serviços e obras cadastrados e consulte as informações relacionadas.' : item.title === 'Financeiro' ? 'Consulte adiantamentos, pagamentos, total recebido e saldo que ainda falta receber.' : 'Consulte os números e indicadores disponíveis no painel de gestão.' })} style={{ minWidth: 0, padding: '10px 11px', borderRadius: 11, border: '1px solid rgba(255,255,255,.18)', background: 'rgba(255,255,255,.09)', color: '#fff', textAlign: 'left', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, marginBottom: 4 }}><Icon name={item.icon} size={14} />{item.title}</span>
+            <span style={{ display: 'block', color: '#d2dbea', fontSize: 10, lineHeight: 1.35 }}>{item.desc}</span>
+            <span style={{ display: 'block', color: '#ffb18e', fontSize: 9, fontWeight: 900, marginTop: 5 }}>VER EXPLICAÇÃO ↗</span>
+          </button>)}
+        </div>
       </div>
     </section>
 
@@ -116,37 +132,6 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         </div>
       })()}
     </section>}
-    <section style={{ ...panel, maxWidth: 920, width: '100%', margin: '0 auto 20px', padding: 18, borderRadius: 16 }}>
-      <div style={{ marginBottom: 12, textAlign: 'left' }}>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Conheça as funcionalidades do ObraFácil PRO</h2>
-        <p style={{ margin: '5px 0 0', color: muted, fontSize: 12 }}>Acesse cada área para conhecer e utilizar os recursos do aplicativo.</p>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 9 }}>
-        {[
-          { icon: 'package', title: 'Produtos', desc: 'Cadastre itens, preços e unidades.', detalhe: 'Cadastre os materiais e produtos que você utiliza ou comercializa. Informe nome, código, unidade de medida e preço para encontrar os itens com facilidade na hora de montar um orçamento.' },
-          { icon: 'users', title: 'Clientes', desc: 'Organize seus contatos.', detalhe: 'Registre os dados dos seus clientes e mantenha os contatos organizados. Assim fica mais fácil selecionar o cliente correto ao preparar uma proposta.' },
-          { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas e acompanhe status.', detalhe: 'Crie orçamentos, adicione produtos e quantidades, confira os valores e acompanhe a situação de cada proposta. Você também pode consultar os orçamentos já cadastrados.' },
-          { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços cadastrados.', detalhe: 'Organize as obras e os serviços relacionados aos seus clientes. Consulte os registros para acompanhar melhor os trabalhos cadastrados.' },
-          { icon: 'wallet', title: 'Financeiro', desc: 'Veja valores recebidos e a receber.', detalhe: 'Acompanhe os valores registrados como adiantamentos e pagamentos, veja o total recebido e consulte o saldo que ainda falta receber em cada orçamento.' },
-          { icon: 'file', title: 'Relatórios', desc: 'Consulte os números no painel.', detalhe: 'Visualize um resumo dos dados cadastrados, como quantidade de produtos, clientes, orçamentos e indicadores financeiros disponíveis no painel.' },
-        ].map(item => <button key={item.title} type="button" onClick={() => setFuncionalidadeAberta(item)} style={{ minWidth: 0, border: '1px solid ' + (dark ? '#35445a' : '#e8edf4'), background: dark ? '#172235' : '#fff', color: text, borderRadius: 9, padding: '10px', textAlign: 'left', cursor: 'pointer' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, marginBottom: 4 }}><Icon name={item.icon} size={14} />{item.title}</span>
-          <span style={{ display: 'block', color: muted, fontSize: 10, lineHeight: 1.4 }}>{item.desc}</span>
-          <span style={{ display: 'block', color: '#f05a28', fontSize: 9, fontWeight: 900, marginTop: 5 }}>ACESSAR →</span>
-        </button>)}
-      </div>
-    </section>
-
-    {funcionalidadeAberta && <div role="presentation" onClick={() => setFuncionalidadeAberta(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(8,15,28,.68)', display: 'grid', placeItems: 'center', padding: 18 }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="of-feature-title" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, background: dark ? '#172235' : '#fff', color: text, borderRadius: 18, padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,.3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <span style={{ width: 42, height: 42, borderRadius: 12, display: 'grid', placeItems: 'center', background: dark ? '#26364d' : '#fff0e9', color: '#f05a28' }}><Icon name={funcionalidadeAberta.icon} size={22} /></span>
-          <h2 id="of-feature-title" style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>{funcionalidadeAberta.title}</h2>
-        </div>
-        <p style={{ color: muted, fontSize: 14, lineHeight: 1.7, margin: '0 0 20px' }}>{funcionalidadeAberta.detalhe}</p>
-        <button type="button" onClick={() => setFuncionalidadeAberta(null)} style={{ border: 0, borderRadius: 10, padding: '11px 18px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer' }}>Entendi</button>
-      </section>
-    </div>}
     {!licenciado && <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
       <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver mais anúncios?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Adquira a versão PRO por apenas <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
       <button type="button" onClick={() => window.open('https://wa.me/5511976983978?text=' + encodeURIComponent('Olá! Quero assinar o ObraFácil PRO por R$ 14,99. Como faço o pagamento e a ativação?'), '_blank', 'noopener,noreferrer')} style={{ border: 0, borderRadius: 11, padding: '12px 16px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>🔓 QUERO O PRO</button>
