@@ -190,7 +190,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     {funcionalidadeAberta && <div onClick={() => setFuncionalidadeAberta(null)} style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(8,15,28,.72)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} style={{ width:'100%', maxWidth:460, boxSizing:'border-box', background:dark?'#172235':'#fff', color:text, borderRadius:18, padding:24, boxShadow:'0 20px 60px rgba(0,0,0,.35)' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}><Icon name={funcionalidadeAberta.icon} size={24}/><h2 style={{ margin:0, fontSize:20 }}>{funcionalidadeAberta.title}</h2></div>
-        <p style={{ margin:'0 0 20px', color:muted, fontSize:14, lineHeight:1.7 }}>funcionalidadeAberta.detalhe</p>
+        <p style={{ margin:'0 0 20px', color:muted, fontSize:14, lineHeight:1.7 }}>{funcionalidadeAberta.detalhe}</p>
         <button type="button" onClick={() => setFuncionalidadeAberta(null)} style={{ border:0, borderRadius:10, padding:'11px 18px', background:'#f05a28', color:'#fff', fontWeight:800, cursor:'pointer' }}>Entendi</button>
       </div>
     </div>}
