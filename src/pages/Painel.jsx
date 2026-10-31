@@ -114,7 +114,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
                 { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas e acompanhe status.', page: 'orcamentos' },
                 { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços cadastrados.', page: 'obras' },
                 { icon: 'wallet', title: 'Financeiro', desc: 'Veja valores recebidos e a receber.', page: 'orcamentos' },
-                { icon: 'chart', title: 'Relatórios', desc: 'Consulte os números no painel.', page: 'painel' },
+                { icon: 'file', title: 'Relatórios', desc: 'Consulte os números no painel.', page: 'painel' },
               ].map(item => <button key={item.title} type="button" onClick={() => btn(item.page)} style={{ minWidth: 0, border: '1px solid ' + (dark ? '#35445a' : '#e8edf4'), background: dark ? '#172235' : '#fff', color: text, borderRadius: 9, padding: '8px 9px', textAlign: 'left', cursor: 'pointer' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 900, marginBottom: 4 }}><Icon name={item.icon} size={14} />{item.title}</span>
                 <span style={{ display: 'block', color: muted, fontSize: 9, lineHeight: 1.35 }}>{item.desc}</span>
