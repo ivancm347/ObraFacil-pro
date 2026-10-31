@@ -8,6 +8,7 @@ const cardStyle = (dark, border) => ({ background: dark ? '#172235' : '#fff', bo
 export default function Painel({ produtos = [], clientes = [], orcamentos = [], obras = [], formatarMoeda, temaEscuro, cardBg, border, setPagina, licenciado = false }) {
   const [ofertasDestaque, setOfertasDestaque] = useState([])
   const [indiceOferta, setIndiceOferta] = useState(0)
+  const [funcionalidadeAberta, setFuncionalidadeAberta] = useState(null)
   useEffect(() => {
     if (ofertasDestaque.length < 2) return
     const intervalo = setInterval(() => {
@@ -122,13 +123,13 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 9 }}>
         {[
-          { icon: 'package', title: 'Produtos', desc: 'Cadastre itens, preços e unidades.', page: 'produtos' },
-          { icon: 'users', title: 'Clientes', desc: 'Organize seus contatos.', page: 'clientes' },
-          { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas e acompanhe status.', page: 'orcamentos' },
-          { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços cadastrados.', page: 'obras' },
-          { icon: 'wallet', title: 'Financeiro', desc: 'Veja valores recebidos e a receber.', page: 'orcamentos' },
-          { icon: 'file', title: 'Relatórios', desc: 'Consulte os números no painel.', page: 'painel' },
-        ].map(item => <button key={item.title} type="button" onClick={() => btn(item.page)} style={{ minWidth: 0, border: '1px solid ' + (dark ? '#35445a' : '#e8edf4'), background: dark ? '#172235' : '#fff', color: text, borderRadius: 9, padding: '10px', textAlign: 'left', cursor: 'pointer' }}>
+          { icon: 'package', title: 'Produtos', desc: 'Cadastre itens, preços e unidades.', detalhe: 'Cadastre os materiais e produtos que você utiliza ou comercializa. Informe nome, código, unidade de medida e preço para encontrar os itens com facilidade na hora de montar um orçamento.' },
+          { icon: 'users', title: 'Clientes', desc: 'Organize seus contatos.', detalhe: 'Registre os dados dos seus clientes e mantenha os contatos organizados. Assim fica mais fácil selecionar o cliente correto ao preparar uma proposta.' },
+          { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas e acompanhe status.', detalhe: 'Crie orçamentos, adicione produtos e quantidades, confira os valores e acompanhe a situação de cada proposta. Você também pode consultar os orçamentos já cadastrados.' },
+          { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços cadastrados.', detalhe: 'Organize as obras e os serviços relacionados aos seus clientes. Consulte os registros para acompanhar melhor os trabalhos cadastrados.' },
+          { icon: 'wallet', title: 'Financeiro', desc: 'Veja valores recebidos e a receber.', detalhe: 'Acompanhe os valores registrados como adiantamentos e pagamentos, veja o total recebido e consulte o saldo que ainda falta receber em cada orçamento.' },
+          { icon: 'file', title: 'Relatórios', desc: 'Consulte os números no painel.', detalhe: 'Visualize um resumo dos dados cadastrados, como quantidade de produtos, clientes, orçamentos e indicadores financeiros disponíveis no painel.' },
+        ].map(item => <button key={item.title} type="button" onClick={() => setFuncionalidadeAberta(item)} style={{ minWidth: 0, border: '1px solid ' + (dark ? '#35445a' : '#e8edf4'), background: dark ? '#172235' : '#fff', color: text, borderRadius: 9, padding: '10px', textAlign: 'left', cursor: 'pointer' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, marginBottom: 4 }}><Icon name={item.icon} size={14} />{item.title}</span>
           <span style={{ display: 'block', color: muted, fontSize: 10, lineHeight: 1.4 }}>{item.desc}</span>
           <span style={{ display: 'block', color: '#f05a28', fontSize: 9, fontWeight: 900, marginTop: 5 }}>ACESSAR →</span>
@@ -136,6 +137,16 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>
     </section>
 
+    {funcionalidadeAberta && <div role="presentation" onClick={() => setFuncionalidadeAberta(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(8,15,28,.68)', display: 'grid', placeItems: 'center', padding: 18 }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="of-feature-title" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, background: dark ? '#172235' : '#fff', color: text, borderRadius: 18, padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <span style={{ width: 42, height: 42, borderRadius: 12, display: 'grid', placeItems: 'center', background: dark ? '#26364d' : '#fff0e9', color: '#f05a28' }}><Icon name={funcionalidadeAberta.icon} size={22} /></span>
+          <h2 id="of-feature-title" style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>{funcionalidadeAberta.title}</h2>
+        </div>
+        <p style={{ color: muted, fontSize: 14, lineHeight: 1.7, margin: '0 0 20px' }}>{funcionalidadeAberta.detalhe}</p>
+        <button type="button" onClick={() => setFuncionalidadeAberta(null)} style={{ border: 0, borderRadius: 10, padding: '11px 18px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer' }}>Entendi</button>
+      </section>
+    </div>}
     {!licenciado && <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
       <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver mais anúncios?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Adquira a versão PRO por apenas <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
       <button type="button" onClick={() => window.open('https://wa.me/5511976983978?text=' + encodeURIComponent('Olá! Quero assinar o ObraFácil PRO por R$ 14,99. Como faço o pagamento e a ativação?'), '_blank', 'noopener,noreferrer')} style={{ border: 0, borderRadius: 11, padding: '12px 16px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>🔓 QUERO O PRO</button>
