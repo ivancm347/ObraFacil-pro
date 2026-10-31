@@ -106,21 +106,6 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
             {oferta.descricao_curta && <p style={{ margin: '0 0 8px', color: muted, fontSize: 15, lineHeight: 1.6 }}>{oferta.descricao_curta}</p>}
             {oferta.preco !== null && oferta.preco !== '' && <div style={{ fontSize: 25, fontWeight: 900, margin: '8px 0 12px' }}>{money(oferta.preco, formatarMoeda)}</div>}
             {(oferta.link_afiliado || oferta.link_video) && <a href={oferta.link_afiliado || oferta.link_video} target="_blank" rel="sponsored nofollow noopener noreferrer" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', background: '#f05a28', color: '#fff', borderRadius: 9, padding: '13px 24px', fontWeight: 900, fontSize: 15, marginTop: 4 }}>SAIBA MAIS ↗</a>}
-            <div className="of-feature-mini" style={{ width: '100%', marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 7, textAlign: 'left' }}>
-              <div style={{ gridColumn: '1 / -1', color: muted, fontSize: 10, fontWeight: 900, letterSpacing: '.7px', textAlign: 'center' }}>CONHEÇA O OBRAFÁCIL PRO</div>
-              {[
-                { icon: 'package', title: 'Produtos', desc: 'Cadastre itens, preços e unidades.', page: 'produtos' },
-                { icon: 'users', title: 'Clientes', desc: 'Organize seus contatos.', page: 'clientes' },
-                { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas e acompanhe status.', page: 'orcamentos' },
-                { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços cadastrados.', page: 'obras' },
-                { icon: 'wallet', title: 'Financeiro', desc: 'Veja valores recebidos e a receber.', page: 'orcamentos' },
-                { icon: 'file', title: 'Relatórios', desc: 'Consulte os números no painel.', page: 'painel' },
-              ].map(item => <button key={item.title} type="button" onClick={() => btn(item.page)} style={{ minWidth: 0, border: '1px solid ' + (dark ? '#35445a' : '#e8edf4'), background: dark ? '#172235' : '#fff', color: text, borderRadius: 9, padding: '8px 9px', textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 900, marginBottom: 4 }}><Icon name={item.icon} size={14} />{item.title}</span>
-                <span style={{ display: 'block', color: muted, fontSize: 9, lineHeight: 1.35 }}>{item.desc}</span>
-                <span style={{ display: 'block', color: '#f05a28', fontSize: 9, fontWeight: 900, marginTop: 5 }}>ACESSAR →</span>
-              </button>)}
-            </div>
             {ofertasDestaque.length > 1 && <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 14 }}>
               <button type="button" onClick={() => setIndiceOferta(i => (i - 1 + ofertasDestaque.length) % ofertasDestaque.length)} aria-label="Oferta anterior" style={{ border: 0, borderRadius: 20, width: 34, height: 34, background: '#f05a28', color: '#fff', fontSize: 20, cursor: 'pointer' }}>‹</button>
               <div style={{ display: 'flex', gap: 5 }}>{ofertasDestaque.map((o, i) => <button key={o.id} type="button" onClick={() => setIndiceOferta(i)} aria-label={'Mostrar oferta ' + (i + 1)} style={{ width: i === indiceOferta ? 20 : 7, height: 7, border: 0, borderRadius: 9, background: i === indiceOferta ? '#f05a28' : (dark ? '#64748b' : '#cbd5e1'), cursor: 'pointer' }} />)}</div>
@@ -130,6 +115,27 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         </div>
       })()}
     </section>}
+    <section style={{ ...panel, maxWidth: 920, width: '100%', margin: '0 auto 20px', padding: 18, borderRadius: 16 }}>
+      <div style={{ marginBottom: 12, textAlign: 'left' }}>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Conheça as funcionalidades do ObraFácil PRO</h2>
+        <p style={{ margin: '5px 0 0', color: muted, fontSize: 12 }}>Acesse cada área para conhecer e utilizar os recursos do aplicativo.</p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 9 }}>
+        {[
+          { icon: 'package', title: 'Produtos', desc: 'Cadastre itens, preços e unidades.', page: 'produtos' },
+          { icon: 'users', title: 'Clientes', desc: 'Organize seus contatos.', page: 'clientes' },
+          { icon: 'receipt', title: 'Orçamentos', desc: 'Monte propostas e acompanhe status.', page: 'orcamentos' },
+          { icon: 'building', title: 'Obras', desc: 'Acompanhe serviços cadastrados.', page: 'obras' },
+          { icon: 'wallet', title: 'Financeiro', desc: 'Veja valores recebidos e a receber.', page: 'orcamentos' },
+          { icon: 'file', title: 'Relatórios', desc: 'Consulte os números no painel.', page: 'painel' },
+        ].map(item => <button key={item.title} type="button" onClick={() => btn(item.page)} style={{ minWidth: 0, border: '1px solid ' + (dark ? '#35445a' : '#e8edf4'), background: dark ? '#172235' : '#fff', color: text, borderRadius: 9, padding: '10px', textAlign: 'left', cursor: 'pointer' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, marginBottom: 4 }}><Icon name={item.icon} size={14} />{item.title}</span>
+          <span style={{ display: 'block', color: muted, fontSize: 10, lineHeight: 1.4 }}>{item.desc}</span>
+          <span style={{ display: 'block', color: '#f05a28', fontSize: 9, fontWeight: 900, marginTop: 5 }}>ACESSAR →</span>
+        </button>)}
+      </div>
+    </section>
+
     {!licenciado && <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 20px', borderRadius: 18, marginBottom: 24, background: dark ? 'linear-gradient(110deg,#172235,#26354b)' : 'linear-gradient(110deg,#111c31,#263e60)', color: '#fff', border: '1px solid #334155' }}>
       <div style={{ flex: '1 1 220px' }}><div style={{ color: '#fdba74', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, marginBottom: 6 }}>OBRAFÁCIL PRO</div><h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 900 }}>Não quer ver mais anúncios?</h2><p style={{ margin: 0, color: '#d2dbea', fontSize: 12, lineHeight: 1.5 }}>Adquira a versão PRO por apenas <strong style={{ color: '#fff', fontSize: 16 }}>R$ 14,99</strong> e use o painel sem anúncios.</p></div>
       <button type="button" onClick={() => window.open('https://wa.me/5511976983978?text=' + encodeURIComponent('Olá! Quero assinar o ObraFácil PRO por R$ 14,99. Como faço o pagamento e a ativação?'), '_blank', 'noopener,noreferrer')} style={{ border: 0, borderRadius: 11, padding: '12px 16px', background: '#f05a28', color: '#fff', fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>🔓 QUERO O PRO</button>
