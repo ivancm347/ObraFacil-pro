@@ -36,8 +36,14 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const totalDoOrcamento = (o) => Math.max(0, Number(o.total || (o.itens || []).reduce((a, i) => a + Number(i.subtotal || Number(i.quantidade || 0) * Number(i.preco || 0)), 0)) || 0)
   const totalPago = (o) => Math.min(totalDoOrcamento(o), Math.max(0, Number(o.adiantamento) || 0) + (Array.isArray(o.adiantamentos) ? o.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0))
   const saldoAReceber = orcamentos.reduce((s, o) => s + Math.max(0, totalDoOrcamento(o) - totalPago(o)), 0)
-  const totalRecebido = orcamentos.reduce((s, o) => s + totalPago(o), 0)
+  const totalRecebidoOrcamentos = orcamentos.reduce((s, o) => s + totalPago(o), 0)
+  // Obras sem orçamento vinculado têm recebimentos próprios; as vinculadas já estão somadas acima.
+  const recebidoObrasAvulsas = obras.filter(o => !o.orcamentoId).reduce((s, o) => s + Math.max(0, Number(o.adiantamento || 0)) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((v, p) => v + Math.max(0, Number(p.valor || 0)), 0) : 0), 0)
+  const totalRecebido = totalRecebidoOrcamentos + recebidoObrasAvulsas
+  const totalDespesasObras = obras.reduce((s, o) => s + (Array.isArray(o.despesas) ? o.despesas.reduce((v, d) => v + Math.max(0, Number(d.valor || 0)), 0) : 0), 0)
+  const resultadoLiquidoGeral = totalRecebido - totalDespesasObras
   const mesAtual = new Date().toISOString().slice(0, 7)
+  const despesasNoMes = obras.reduce((s, o) => s + (Array.isArray(o.despesas) ? o.despesas.filter(d => String(d.data || '').startsWith(mesAtual)).reduce((v, d) => v + Math.max(0, Number(d.valor || 0)), 0) : 0), 0)
   const recebidoNoMes = orcamentos.reduce((s, o) => {
     const entradaInicial = String(o.data || '').startsWith(mesAtual) ? Math.max(0, Number(o.adiantamento) || 0) : 0
     const adiantamentosMes = Array.isArray(o.adiantamentos) ? o.adiantamentos.filter(a => String(a.data || '').startsWith(mesAtual)).reduce((v, a) => v + Math.max(0, Number(a.valor) || 0), 0) : 0
@@ -165,6 +171,21 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Recebido neste mês</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: '#2563eb', overflowWrap: 'anywhere' }}>{money(recebidoNoMes, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Com base nas datas registradas</div>
+        </div>
+        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#fff1f0', border: `1px solid ${dark ? '#5b3030' : '#f8d7d4'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Despesas das obras</div>
+          <div style={{ fontSize: 23, fontWeight: 800, color: '#dc2626', overflowWrap: 'anywhere' }}>{money(totalDespesasObras, formatarMoeda)}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Total de todos os lançamentos</div>
+        </div>
+        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="wallet" size={16} /> Resultado líquido geral</div>
+          <div style={{ fontSize: 23, fontWeight: 800, color: resultadoLiquidoGeral >= 0 ? '#16a34a' : '#dc2626', overflowWrap: 'anywhere' }}>{money(resultadoLiquidoGeral, formatarMoeda)}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Recebido menos despesas</div>
+        </div>
+        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#fff8eb', border: `1px solid ${dark ? '#554328' : '#f6e6c6'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Despesas neste mês</div>
+          <div style={{ fontSize: 23, fontWeight: 800, color: '#d97706', overflowWrap: 'anywhere' }}>{money(despesasNoMes, formatarMoeda)}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Pelas datas dos lançamentos</div>
         </div>
       </div>
     </section>
