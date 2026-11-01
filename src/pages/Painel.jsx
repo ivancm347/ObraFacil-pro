@@ -235,7 +235,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       </div>)}
     </div>
 
-    <section style={{ ...panel, padding: 22, marginBottom: 20 }}>
+    <section style={{ ...panel, padding: 22, marginBottom: 20, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
         <div><h2 style={{ fontSize: 17, fontWeight: 800, margin: 0 }}>Financeiro</h2><p style={{ color: muted, fontSize: 12, margin: '5px 0 0' }}>Resumo calculado a partir dos adiantamentos e pagamentos registrados</p></div>
         <button onClick={() => btn('orcamentos')} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: dark ? '#27364b' : '#fff2ec', color: '#e85b25', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>Ver orçamentos →</button>
@@ -245,32 +245,32 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(175px,1fr))', gap: 12 }}>
-        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
+        <div className="of-card" style={{ padding: 18, minHeight: 116, borderRadius: 16, boxShadow: dark ? 'none' : '0 5px 18px rgba(20,35,60,.05)', transition: 'transform .18s,box-shadow .18s', background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="check" size={16} /> Total recebido</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: '#16a34a', overflowWrap: 'anywhere' }}>{money(totalRecebido, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Todos os orçamentos</div>
         </div>
-        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#fff8eb', border: `1px solid ${dark ? '#554328' : '#f6e6c6'}` }}>
+        <div className="of-card" style={{ padding: 18, minHeight: 116, borderRadius: 16, boxShadow: dark ? 'none' : '0 5px 18px rgba(20,35,60,.05)', transition: 'transform .18s,box-shadow .18s', background: dark ? '#1d2a3e' : '#fff8eb', border: `1px solid ${dark ? '#554328' : '#f6e6c6'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="wallet" size={16} /> A receber</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: '#d97706', overflowWrap: 'anywhere' }}>{money(saldoAReceber, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>{orcamentosComSaldo} orçamento(s) com saldo pendente</div>
         </div>
-        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#eef5ff', border: `1px solid ${dark ? '#2d4263' : '#dbe8ff'}` }}>
+        <div className="of-card" style={{ padding: 18, minHeight: 116, borderRadius: 16, boxShadow: dark ? 'none' : '0 5px 18px rgba(20,35,60,.05)', transition: 'transform .18s,box-shadow .18s', background: dark ? '#1d2a3e' : '#eef5ff', border: `1px solid ${dark ? '#2d4263' : '#dbe8ff'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Recebido neste mês</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: '#2563eb', overflowWrap: 'anywhere' }}>{money(recebidoNoMes, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Com base nas datas registradas</div>
         </div>
-        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#fff1f0', border: `1px solid ${dark ? '#5b3030' : '#f8d7d4'}` }}>
+        <div className="of-card" style={{ padding: 18, minHeight: 116, borderRadius: 16, boxShadow: dark ? 'none' : '0 5px 18px rgba(20,35,60,.05)', transition: 'transform .18s,box-shadow .18s', background: dark ? '#1d2a3e' : '#fff1f0', border: `1px solid ${dark ? '#5b3030' : '#f8d7d4'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Despesas das obras</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: '#dc2626', overflowWrap: 'anywhere' }}>{money(totalDespesasObras, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Total de todos os lançamentos</div>
         </div>
-        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
+        <div className="of-card" style={{ padding: 18, minHeight: 116, borderRadius: 16, boxShadow: dark ? 'none' : '0 5px 18px rgba(20,35,60,.05)', transition: 'transform .18s,box-shadow .18s', background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="wallet" size={16} /> Resultado líquido geral</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: resultadoLiquidoGeral >= 0 ? '#16a34a' : '#dc2626', overflowWrap: 'anywhere' }}>{money(resultadoLiquidoGeral, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Recebido menos despesas</div>
         </div>
-        <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#fff8eb', border: `1px solid ${dark ? '#554328' : '#f6e6c6'}` }}>
+        <div className="of-card" style={{ padding: 18, minHeight: 116, borderRadius: 16, boxShadow: dark ? 'none' : '0 5px 18px rgba(20,35,60,.05)', transition: 'transform .18s,box-shadow .18s', background: dark ? '#1d2a3e' : '#fff8eb', border: `1px solid ${dark ? '#554328' : '#f6e6c6'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: muted, fontSize: 12, marginBottom: 9 }}><Icon name="receipt" size={16} /> Despesas neste mês</div>
           <div style={{ fontSize: 23, fontWeight: 800, color: '#d97706', overflowWrap: 'anywhere' }}>{money(despesasNoMes, formatarMoeda)}</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>Pelas datas dos lançamentos</div>
