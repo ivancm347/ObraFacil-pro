@@ -11,6 +11,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const [indiceOferta, setIndiceOferta] = useState(0)
   const [funcionalidadeAberta, setFuncionalidadeAberta] = useState(null)
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false)
+  const [compartilhandoApp, setCompartilhandoApp] = useState(false)
   useEffect(() => {
     if (ofertasDestaque.length < 2) return
     const intervalo = setInterval(() => {
@@ -52,6 +53,18 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     const parcelasMes = Array.isArray(o.pagamentos) ? o.pagamentos.filter(p => String(p.data || '').startsWith(mesAtual)).reduce((v, p) => v + Math.max(0, Number(p.valor) || 0), 0) : 0
     return s + entradaInicial + adiantamentosMes + parcelasMes
   }, 0)
+  const compartilharApp = async () => {
+    if (compartilhandoApp) return
+    setCompartilhandoApp(true)
+    const link = 'https://ivancm347.github.io/ObraFacil-pro/'
+    const dados = { title: 'ObraFácil PRO', text: 'Conheça o ObraFácil PRO: aplicativo para organizar clientes, produtos, orçamentos e obras.', url: link }
+    try {
+      if (navigator.share) await navigator.share(dados)
+      else if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(link); alert('Link do ObraFácil PRO copiado! Agora é só compartilhar.') }
+      else window.prompt('Copie o link do ObraFácil PRO:', link)
+    } catch (e) { if (e?.name !== 'AbortError') { console.error('Erro ao compartilhar:', e); window.prompt('Copie o link do ObraFácil PRO:', link) } }
+    finally { setCompartilhandoApp(false) }
+  }
   const gerarRelatorioFinanceiro = () => {
     if (gerandoRelatorio) return
     setGerandoRelatorio(true)
@@ -132,6 +145,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
           <h1 style={{ fontFamily: "'Sora',sans-serif", fontSize: 'clamp(24px,4vw,34px)', lineHeight: 1.18, margin: '0 0 10px', letterSpacing: '-1px' }}>Sua obra, seus números.<br/>Tudo sob controle.</h1>
           <p style={{ margin: '0 0 22px', fontSize: 14, lineHeight: 1.7, color: '#d2dbea', maxWidth: 480 }}>Acompanhe seus orçamentos, clientes, produtos e obras em um só lugar.</p>
           <button onClick={() => btn('orcamentos')} className="of-action" style={{ border: 0, borderRadius: 11, padding: '12px 17px', background: '#f05a28', color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, boxShadow: '0 6px 18px rgba(240,90,40,.25)' }}>＋ Criar orçamento <span style={{ fontSize: 18 }}>↗</span></button>
+          <button type="button" onClick={compartilharApp} disabled={compartilhandoApp} style={{ marginLeft: 9, marginTop: 8, border: '1px solid rgba(255,255,255,.35)', borderRadius: 11, padding: '12px 17px', background: 'rgba(255,255,255,.12)', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>↗ Compartilhar app</button>
         </div>
         <div className="of-hero-features" style={{ flex: '1 1 44%', display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
           {[
