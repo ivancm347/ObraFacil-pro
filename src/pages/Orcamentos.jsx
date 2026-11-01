@@ -134,9 +134,12 @@ export default function Orcamentos({
 
   const calcularTotal = (itens) => itens.reduce((s, i) => s + i.subtotal, 0)
   const calcularAdiantamento = (orc) => {
-    const entradaLegada = Math.max(0, Number(orc.adiantamento) || 0)
     const entradas = Array.isArray(orc.adiantamentos) ? orc.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0
-    return Math.min(Number(orc.total) || 0, entradaLegada + entradas)
+    // Quando há lançamentos detalhados, eles são a fonte correta; o campo antigo pode conter o total consolidado.
+    const valor = Array.isArray(orc.adiantamentos) && orc.adiantamentos.length
+      ? entradas
+      : Math.max(0, Number(orc.adiantamento) || 0)
+    return Math.min(Number(orc.total) || 0, valor)
   }
   const calcularPagamentos = (orc) => Array.isArray(orc.pagamentos)
     ? orc.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0)
@@ -298,7 +301,7 @@ export default function Orcamentos({
       `).join('')
 
       const historicoRecebimentos = [
-        ...(Number(orc.adiantamento || 0) > 0 ? [{ data: orc.data, valor: orc.adiantamento, descricao: 'Entrada anterior' }] : []),
+        ...(!(Array.isArray(orc.adiantamentos) && orc.adiantamentos.length) && Number(orc.adiantamento || 0) > 0 ? [{ data: orc.data, valor: orc.adiantamento, descricao: 'Entrada anterior' }] : []),
         ...(Array.isArray(orc.adiantamentos) ? orc.adiantamentos.map(a => ({ data: a.data, valor: a.valor, descricao: [a.motivo || 'Adiantamento', a.observacao].filter(Boolean).join(' — ') })) : []),
         ...(Array.isArray(orc.pagamentos) ? orc.pagamentos.map(p => ({ data: p.data, valor: p.valor, descricao: p.observacao || 'Pagamento recebido' })) : [])
       ].map(r => `<tr><td style="padding:7px;border-bottom:1px solid #e5e7eb;">${r.data ? new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data não informada'}</td><td style="padding:7px;border-bottom:1px solid #e5e7eb;">${r.descricao}</td><td style="padding:7px;text-align:right;border-bottom:1px solid #e5e7eb;color:#15803d;font-weight:700;">${formatarMoeda(r.valor)}</td></tr>`).join('')
