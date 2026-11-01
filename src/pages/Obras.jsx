@@ -51,14 +51,14 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
       })
       if (!migraveis.length) return obra
       houveCorrecao = true
-      const idsMigrados = new Set(migraveis.map(item => item.id).filter(Boolean))
+      const itensMigrados = new Set(migraveis)
       const semDuplicar = migraveis.filter(item => !adiantamentosAtuais.some(a =>
         (item.id && a.id === item.id) || (Number(a.valor) === Number(item.valor) && String(a.data || '') === String(item.data || '') && String(a.descricao || '').toLowerCase() === String(item.descricao || '').toLowerCase())
       ))
       return {
         ...obra,
         adiantamentos: [...adiantamentosAtuais, ...semDuplicar.map(item => ({ ...item, motivo: item.motivo || 'Adiantamento' }))],
-        despesas: despesasAtuais.filter(item => !idsMigrados.has(item.id)),
+        despesas: despesasAtuais.filter(item => !itensMigrados.has(item)),
         atualizadoEm: new Date().toISOString()
       }
     })
