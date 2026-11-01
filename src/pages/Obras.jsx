@@ -137,33 +137,6 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
     mostrarNotificacao?.(editando ? 'Obra atualizada!' : 'Obra cadastrada!')
   }
 
-  // Recupera somente registros antigos que tenham identificação explícita de adiantamento.
-  const recuperarAdiantamentosLegados = obra => {
-    const despesas = Array.isArray(obra?.despesas) ? obra.despesas : []
-    const reconhecer = item => {
-      const texto = [item?.tipo, item?.categoria, item?.descricao, item?.motivo, item?.observacao]
-        .filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
-      return texto.includes('adiantamento')
-    }
-    const antigos = despesas.filter(reconhecer)
-    if (!antigos.length) return obra
-    const restantes = despesas.filter(item => !reconhecer(item))
-    const atuais = Array.isArray(obra.adiantamentos) ? obra.adiantamentos : []
-    const ids = new Set(atuais.map(item => String(item.id)))
-    const migrados = antigos.filter(item => !ids.has(String(item.id))).map(item => ({
-      ...item,
-      id: item.id || `adiantamento-recuperado-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      motivo: item.motivo || 'Adiantamento recuperado',
-      descricao: item.descricao || 'Adiantamento recebido'
-    }))
-    const atualizado = { ...obra, despesas: restantes, adiantamentos: [...atuais, ...migrados], atualizadoEm: new Date().toISOString() }
-    setObras(lista => lista.map(item => item.id === atualizado.id ? atualizado : item))
-    sincronizarHistoricoOrcamento(atualizado)
-    setFinanceiroObra(atualizado)
-    mostrarNotificacao?.(`${migrados.length} adiantamento(s) recuperado(s) do histórico.`)
-    return atualizado
-  }
-
   const iniciarEdicaoDespesa = item => {
     setTipoLancamento('despesa')
     setEditandoDespesaId(item.id)
@@ -282,7 +255,7 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
                 <div><div style={{ fontSize: 10, color: muted }}>RESULTADO APÓS DESPESAS</div><strong style={{ color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Recebido: {moeda(recebido)} • Falta: {moeda(saldoReceber(obra))}</div></div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-                <button onClick={() => { recuperarAdiantamentosLegados(obra); setTipoLancamento('adiantamento'); limparFormularioLancamento(); setCategoriaDespesa('Outros'); setLancamentoData(new Date().toISOString().slice(0, 10)) }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
+                <button onClick={() => { setFinanceiroObra(obra); setTipoLancamento('adiantamento'); limparFormularioLancamento(); setCategoriaDespesa('Outros'); setLancamentoData(new Date().toISOString().slice(0, 10)) }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
                 <button onClick={() => abrirEdicao(obra)} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: temaEscuro ? '#263244' : '#e9eef5', fontWeight: 700, cursor: 'pointer' }}>✎ Editar</button>
                 <button onClick={() => excluir(obra.id)} style={{ border: 0, borderRadius: 9, padding: '10px 13px', background: '#fee2e2', color: '#b91c1c', cursor: 'pointer' }}>Excluir</button>
               </div>
@@ -328,12 +301,12 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
             </div>
             {(() => {
               const financeiro = pagamentosDaObra(financeiroObra)
-              const listaPagamentos = [...(financeiro.pagamentos || []).map(p => ({ ...p, tipoLancamento: 'pagamento' })), ...(financeiro.entradaLegada > 0 ? [{ id: 'adiantamento-inicial', valor: financeiro.entradaLegada, descricao: 'Adiantamento anterior', data: '', tipoLancamento: 'adiantamento' }] : []), ...(financeiro.adiantamentos || []).map(a => ({ ...a, tipoLancamento: 'adiantamento', descricao: [a.motivo || 'Adiantamento', a.observacao].filter(Boolean).join(' — ') }))]
+              const listaPagamentos = [...(financeiro.pagamentos || []), ...(financeiro.entradaLegada > 0 ? [{ id: 'adiantamento-inicial', valor: financeiro.entradaLegada, descricao: 'Adiantamento anterior', data: '' }] : []), ...(financeiro.adiantamentos || []).map(a => ({ ...a, descricao: [a.motivo || 'Adiantamento', a.observacao].filter(Boolean).join(' — ') }))]
               return [{ tipo: 'pagamento', titulo: financeiro.vinculado ? 'Adiantamentos e quitação (sincronizados no orçamento)' : 'Adiantamentos e pagamentos recebidos', lista: listaPagamentos }, { tipo: 'despesa', titulo: 'Despesas da obra', lista: financeiroObra.despesas || [] }]
             })().map(grupo => (
               <div key={grupo.tipo} style={{ marginTop: 18 }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{grupo.titulo}</h3>
-                {grupo.lista.length === 0 ? <div style={{ color: muted, fontSize: 12 }}>Nenhum lançamento ainda.</div> : grupo.lista.map(item => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: `1px solid ${borda}` }}><div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13 }}>{item.categoria ? `${item.categoria} — ` : ''}{item.descricao}</div><div style={{ color: muted, fontSize: 11 }}>{item.data || 'Adiantamento cadastrado'}{item.dias ? ` • ${item.dias} dia(s) × ${moeda(item.valorDiaria)}` : ''}{item.observacao ? ` • ${item.observacao}` : ''}</div></div><strong style={{ color: grupo.tipo === 'pagamento' ? '#16a34a' : '#dc2626' }}>{moeda(item.valor)}</strong>{grupo.tipo === 'despesa' && <button type="button" onClick={() => iniciarEdicaoDespesa(item)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#1d4ed8', background: '#dbeafe', cursor: 'pointer' }}>Editar</button>}{item.id !== 'adiantamento-inicial' && <button type="button" onClick={() => excluirLancamento(item.tipoLancamento || grupo.tipo, item.id)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#b91c1c', background: '#fee2e2', cursor: 'pointer' }}>Excluir</button>}</div>)}
+                {grupo.lista.length === 0 ? <div style={{ color: muted, fontSize: 12 }}>Nenhum lançamento ainda.</div> : grupo.lista.map(item => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: `1px solid ${borda}` }}><div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13 }}>{item.categoria ? `${item.categoria} — ` : ''}{item.descricao}</div><div style={{ color: muted, fontSize: 11 }}>{item.data || 'Adiantamento cadastrado'}{item.dias ? ` • ${item.dias} dia(s) × ${moeda(item.valorDiaria)}` : ''}{item.observacao ? ` • ${item.observacao}` : ''}</div></div><strong style={{ color: grupo.tipo === 'pagamento' ? '#16a34a' : '#dc2626' }}>{moeda(item.valor)}</strong>{grupo.tipo === 'despesa' && <button type="button" onClick={() => iniciarEdicaoDespesa(item)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#1d4ed8', background: '#dbeafe', cursor: 'pointer' }}>Editar</button>}{item.id !== 'adiantamento-inicial' && <button type="button" onClick={() => excluirLancamento(grupo.tipo, item.id)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#b91c1c', background: '#fee2e2', cursor: 'pointer' }}>Excluir</button>}</div>)}
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}><button type="button" onClick={() => setFinanceiroObra(null)} style={{ border: 0, borderRadius: 10, background: '#f05a28', color: '#fff', padding: '11px 18px', fontWeight: 800, cursor: 'pointer' }}>Fechar</button></div>
