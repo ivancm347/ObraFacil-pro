@@ -46,8 +46,8 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
       const adiantamentosAtuais = Array.isArray(obra.adiantamentos) ? obra.adiantamentos : []
       const migraveis = despesasAtuais.filter(item => {
         const texto = [item?.categoria, item?.descricao, item?.motivo, item?.observacao]
-          .filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
-        return /\\badiantamento\\b|\\bentrada recebida\\b|\\bsinal recebido\\b/.test(texto)
+          .filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+        return /\badiantamento\b|\bentrada recebida\b|\bsinal recebido\b/.test(texto)
       })
       if (!migraveis.length) return obra
       houveCorrecao = true
