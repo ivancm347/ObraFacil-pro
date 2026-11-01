@@ -355,6 +355,11 @@ export default function Orcamentos({
           <div style="margin-top:5px;font-size:13px;color:#15803d;font-weight:700;">PAGAMENTOS RECEBIDOS: ${formatarMoeda(calcularPagamentos(orc))}</div>
           <div style="margin-top:5px;font-size:13px;color:#15803d;font-weight:700;">TOTAL RECEBIDO: ${formatarMoeda(calcularRecebido(orc))}</div>
           <div style="margin-top:6px;font-size:17px;color:#111;font-weight:800;">SALDO RESTANTE: ${formatarMoeda(calcularSaldo(orc))}</div>
+          <div style="margin-top:14px;padding:14px 16px;border:2px solid ${calcularSaldo(orc) <= 0.009 ? '#16a34a' : '#cbd5e1'};border-radius:12px;background:${calcularSaldo(orc) <= 0.009 ? '#dcfce7' : '#f8fafc'};text-align:center;page-break-inside:avoid;">
+            <div style="font-size:12px;letter-spacing:1px;font-weight:900;color:${calcularSaldo(orc) <= 0.009 ? '#166534' : '#475569'};">${calcularSaldo(orc) <= 0.009 ? '✓ ORÇAMENTO QUITADO' : 'VALOR JÁ PAGO'}</div>
+            <div style="font-size:25px;line-height:1.25;font-weight:900;color:${calcularSaldo(orc) <= 0.009 ? '#166534' : '#15803d'};margin-top:4px;">${formatarMoeda(calcularRecebido(orc))}</div>
+            ${calcularSaldo(orc) <= 0.009 ? '<div style="font-size:11px;font-weight:700;color:#166534;margin-top:3px;">PAGAMENTO TOTAL CONFIRMADO</div>' : ''}
+          </div>
           ${orc.observacoes ? `<div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;"><b>Observações:</b><br/>${orc.observacoes}</div>` : ''}
           <div style="display:flex;gap:32px;margin-top:52px;page-break-inside:avoid;">
             <div style="flex:1;text-align:center;border-top:1px solid #94a3b8;padding-top:8px;font-size:11px;color:#475569;">Assinatura do cliente</div>
