@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 
 const NOVA_OBRA = { nome: '', clienteId: '', clienteNome: '', orcamentoId: '', orcamentoNumero: '', endereco: '', tipo: 'Reforma geral', status: 'Planejada', inicio: '', previsao: '', valor: '', custo: '', adiantamento: 0, pagamentos: [], despesas: [], observacoes: '' }
 
-export default function Obras({ obras = [], setObras, clientes = [], orcamentos = [], mostrarNotificacao, temaEscuro, cardBg, border, formatarMoeda }) {
+export default function Obras({ obras = [], setObras, setOrcamentos, clientes = [], orcamentos = [], mostrarNotificacao, temaEscuro, cardBg, border, formatarMoeda }) {
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState('Todas')
   const [modal, setModal] = useState(false)
@@ -37,20 +37,19 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     return orcamentos.filter(o => o.clienteId === form.clienteId)
   }, [orcamentos, form.clienteId])
 
-  // Quando a obra está vinculada, os recebimentos vêm exclusivamente do orçamento.
+  // A obra passa a ser a fonte oficial dos recebimentos.
   const orcamentoDaObra = obra => obra?.orcamentoId ? orcamentos.find(o => o.id === obra.orcamentoId) : null
   const pagamentosDaObra = obra => {
-    const orcamento = orcamentoDaObra(obra)
-    if (orcamento) {
-      const entradaLegada = Math.max(0, Number(orcamento.adiantamento || 0))
-      const adiantamentos = Array.isArray(orcamento.adiantamentos) ? orcamento.adiantamentos : []
-      const entrada = entradaLegada + adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor || 0)), 0)
-      const parcelas = Array.isArray(orcamento.pagamentos) ? orcamento.pagamentos : []
-      return { adiantamento: entrada, adiantamentos, entradaLegada, pagamentos: parcelas, total: Math.min(Number(orcamento.total || orcamento.valor || 0), entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0)), vinculado: true }
-    }
-    const entrada = Math.max(0, Number(obra.adiantamento || 0))
+    const adiantamentos = Array.isArray(obra.adiantamentos) ? obra.adiantamentos : []
     const parcelas = Array.isArray(obra.pagamentos) ? obra.pagamentos : []
-    return { adiantamento: entrada, pagamentos: parcelas, total: entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0), vinculado: false }
+    const entradaLegada = Math.max(0, Number(obra.adiantamento || 0))
+    const entrada = entradaLegada + adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor || 0)), 0)
+    return { adiantamento: entrada, adiantamentos, entradaLegada, pagamentos: parcelas, total: entrada + parcelas.reduce((s, p) => s + Math.max(0, Number(p.valor || 0)), 0), vinculado: !!obra.orcamentoId }
+  }
+  const sincronizarHistoricoOrcamento = obra => {
+    if (!obra?.orcamentoId || !setOrcamentos) return
+    const recebido = pagamentosDaObra(obra).total
+    setOrcamentos(orcamentos.map(o => o.id === obra.orcamentoId ? { ...o, adiantamento: obra.adiantamento || 0, adiantamentos: obra.adiantamentos || [], pagamentos: obra.pagamentos || [], saldoRestante: Math.max(0, Number(obra.valor || 0) - recebido) } : o))
   }
   const recebidoObra = obra => pagamentosDaObra(obra).total
   const despesasObra = obra => Array.isArray(obra.despesas) ? obra.despesas.reduce((s, d) => s + Number(d.valor || 0), 0) : 0
@@ -108,8 +107,20 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
   const salvar = e => {
     e.preventDefault()
     if (!form.nome.trim()) { mostrarNotificacao?.('Informe o nome da obra.'); return }
-    const registro = { ...form, id: editando || `obra-${Date.now()}`, valor: Number(form.valor || 0), custo: Number(form.custo || 0), atualizadoEm: new Date().toISOString() }
+    const orcamento = form.orcamentoId ? orcamentos.find(o => o.id === form.orcamentoId) : null
+    const anterior = editando ? obras.find(o => o.id === editando) : null
+    let pagamentos = Array.isArray(form.pagamentos) ? form.pagamentos : []
+    let adiantamentos = Array.isArray(form.adiantamentos) ? form.adiantamentos : []
+    let adiantamento = Number(form.adiantamento || 0)
+    const migrado = anterior?.financeiroMigradoDeOrcamentoId === form.orcamentoId
+    if (orcamento && !migrado && !pagamentos.length && !adiantamentos.length && !adiantamento) {
+      pagamentos = Array.isArray(orcamento.pagamentos) ? [...orcamento.pagamentos] : []
+      adiantamentos = Array.isArray(orcamento.adiantamentos) ? [...orcamento.adiantamentos] : []
+      adiantamento = Math.max(0, Number(orcamento.adiantamento || 0))
+    }
+    const registro = { ...form, id: editando || `obra-${Date.now()}`, valor: Number(form.valor || 0), custo: Number(form.custo || 0), adiantamento, adiantamentos, pagamentos, ...(orcamento ? { financeiroMigradoDeOrcamentoId: form.orcamentoId } : {}), atualizadoEm: new Date().toISOString() }
     setObras(editando ? obras.map(o => o.id === editando ? registro : o) : [registro, ...obras])
+    sincronizarHistoricoOrcamento(registro)
     setModal(false)
     mostrarNotificacao?.(editando ? 'Obra atualizada!' : 'Obra cadastrada!')
   }
@@ -144,10 +155,6 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     const dias = Number(String(diasTrabalhados).replace(',', '.'))
     const taxaDiaria = Number(String(valorDiaria).replace(',', '.'))
     const valor = diaria ? dias * taxaDiaria : Number(String(lancamentoValor).replace(',', '.'))
-    if (tipoLancamento === 'pagamento' && orcamentoDaObra(financeiroObra)) {
-      mostrarNotificacao?.('Esta obra está vinculada a um orçamento. Registre o recebimento no próprio orçamento para evitar duplicidade.')
-      return
-    }
     if (!Number.isFinite(valor) || valor <= 0) { mostrarNotificacao?.('Informe um valor maior que zero.'); return }
     const chave = tipoLancamento === 'pagamento' ? 'pagamentos' : 'despesas'
     const lista = Array.isArray(financeiroObra[chave]) ? financeiroObra[chave] : []
@@ -162,6 +169,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     const novaLista = editandoDespesaId && tipoLancamento === 'despesa' ? lista.map(item => item.id === editandoDespesaId ? registroLancamento : item) : [...lista, registroLancamento]
     const atualizado = { ...financeiroObra, [chave]: novaLista, atualizadoEm: new Date().toISOString() }
     setObras(obras.map(o => o.id === atualizado.id ? atualizado : o))
+    if (tipoLancamento === 'pagamento') sincronizarHistoricoOrcamento(atualizado)
     setFinanceiroObra(atualizado)
     limparFormularioLancamento()
     mostrarNotificacao?.(tipoLancamento === 'pagamento' ? 'Pagamento registrado!' : editandoDespesaId ? 'Despesa atualizada!' : 'Despesa registrada!')
@@ -169,13 +177,10 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
 
   const excluirLancamento = (tipo, id) => {
     if (!financeiroObra) return
-    if (tipo === 'pagamento' && orcamentoDaObra(financeiroObra)) {
-      mostrarNotificacao?.('Os pagamentos desta obra são gerenciados no orçamento vinculado.')
-      return
-    }
     const chave = tipo === 'pagamento' ? 'pagamentos' : 'despesas'
     const atualizado = { ...financeiroObra, [chave]: (financeiroObra[chave] || []).filter(item => item.id !== id) }
     setObras(obras.map(o => o.id === atualizado.id ? atualizado : o))
+    if (tipo === 'pagamento') sincronizarHistoricoOrcamento(atualizado)
     setFinanceiroObra(atualizado)
     if (editandoDespesaId === id) limparFormularioLancamento()
     mostrarNotificacao?.('Lançamento excluído.')
@@ -262,11 +267,11 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
                 { label: 'Resultado líquido', valor: recebidoObra(financeiroObra) - despesasObra(financeiroObra), cor: recebidoObra(financeiroObra) - despesasObra(financeiroObra) >= 0 ? '#16a34a' : '#dc2626' },
               ].map(k => <div key={k.label} style={{ border: `1px solid ${borda}`, borderRadius: 12, padding: 12 }}><div style={{ color: muted, fontSize: 10, fontWeight: 800 }}>{k.label.toUpperCase()}</div><div style={{ color: k.cor, fontWeight: 850, fontSize: 17, marginTop: 6 }}>{moeda(k.valor)}</div></div>)}
             </div>
-            {orcamentoDaObra(financeiroObra) && <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: temaEscuro ? '#163b2b' : '#e8f8ef', color: temaEscuro ? '#bbf7d0' : '#166534', fontSize: 12 }}>Esta obra está vinculada ao orçamento #{orcamentoDaObra(financeiroObra).numero || ''}. Os recebimentos e o adiantamento são consultados automaticamente nele. Registre novos pagamentos na tela do orçamento; aqui você pode lançar despesas.</div>}
+            {orcamentoDaObra(financeiroObra) && <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: temaEscuro ? '#163b2b' : '#e8f8ef', color: temaEscuro ? '#bbf7d0' : '#166534', fontSize: 12 }}>Esta obra está vinculada ao orçamento #{orcamentoDaObra(financeiroObra).numero || ''}. Os recebimentos e o adiantamento são consultados automaticamente nele. Registre aqui os recebimentos e as despesas. O orçamento exibirá o histórico automaticamente.</div>}
             <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: temaEscuro ? '#111827' : '#f8fafc' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>{editandoDespesaId ? 'Editar despesa' : 'Registrar lançamento'}</h3>
               <form onSubmit={registrarLancamento} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(145px,1fr))', gap: 10 }}>
-                <select value={tipoLancamento} onChange={e => { setTipoLancamento(e.target.value); setEditandoDespesaId(null) }} style={inputStyle}><option value="pagamento" disabled={!!orcamentoDaObra(financeiroObra)}>Pagamento recebido{orcamentoDaObra(financeiroObra) ? ' (registrar no orçamento)' : ''}</option><option value="despesa">Despesa da obra</option></select>
+                <select value={tipoLancamento} onChange={e => { setTipoLancamento(e.target.value); setEditandoDespesaId(null) }} style={inputStyle}><option value="pagamento">Pagamento recebido</option><option value="despesa">Despesa da obra</option></select>
                 {tipoLancamento === 'despesa' && <select value={categoriaDespesa} onChange={e => setCategoriaDespesa(e.target.value)} style={inputStyle}>{['Combustível', 'Alimentação / almoço', 'Café', 'Transporte', 'Materiais extras', 'Diária de colaborador', 'Ferramentas', 'Outros'].map(v => <option key={v}>{v}</option>)}</select>}
                 {tipoLancamento === 'despesa' && categoriaDespesa === 'Diária de colaborador' ? <>
                   <input required value={colaborador} onChange={e => setColaborador(e.target.value)} placeholder="Nome do colaborador" style={inputStyle} />
@@ -285,7 +290,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
             {(() => {
               const financeiro = pagamentosDaObra(financeiroObra)
               const listaPagamentos = [...(financeiro.pagamentos || []), ...(financeiro.entradaLegada > 0 ? [{ id: 'adiantamento-inicial', valor: financeiro.entradaLegada, descricao: 'Adiantamento anterior', data: '' }] : []), ...(financeiro.adiantamentos || []).map(a => ({ ...a, descricao: [a.motivo || 'Adiantamento', a.observacao].filter(Boolean).join(' — ') }))]
-              return [{ tipo: 'pagamento', titulo: financeiro.vinculado ? 'Pagamentos do orçamento vinculado' : 'Pagamentos recebidos', lista: listaPagamentos }, { tipo: 'despesa', titulo: 'Despesas da obra', lista: financeiroObra.despesas || [] }]
+              return [{ tipo: 'pagamento', titulo: financeiro.vinculado ? 'Recebimentos da obra (sincronizados no orçamento)' : 'Pagamentos recebidos', lista: listaPagamentos }, { tipo: 'despesa', titulo: 'Despesas da obra', lista: financeiroObra.despesas || [] }]
             })().map(grupo => (
               <div key={grupo.tipo} style={{ marginTop: 18 }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{grupo.titulo}</h3>
