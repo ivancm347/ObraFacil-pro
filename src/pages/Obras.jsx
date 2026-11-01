@@ -255,14 +255,16 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
 
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: 12, margin: '16px 0' }}>
         {[
-          { label: 'Valor contratado', valor: totais.valor, cor: '#2563eb' },
-          { label: 'Custo estimado', valor: totais.custo, cor: '#d97706' },
-          { label: 'Resultado previsto', valor: totais.resultado, cor: totais.resultado >= 0 ? '#16a34a' : '#dc2626' },
+          { label: 'Valor contratado', valor: totais.valor, cor: '#2563eb', detalhe: 'Total dos contratos' },
+          { label: 'Total recebido', valor: totais.recebido, cor: '#16a34a', detalhe: 'Adiantamentos + pagamentos', destaque: true },
+          { label: 'A receber', valor: totais.receber, cor: '#d97706', detalhe: 'Saldo em aberto' },
+          { label: 'Despesas', valor: totais.despesas, cor: '#dc2626', detalhe: 'Lançamentos das obras' },
+          { label: 'Resultado previsto', valor: totais.resultado, cor: totais.resultado >= 0 ? '#16a34a' : '#dc2626', detalhe: 'Contratado menos custo' },
         ].map(k => (
-          <div key={k.label} style={{ background: cardBg || '#fff', border: `1px solid ${borda}`, borderRadius: 15, padding: 15 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: muted, textTransform: 'uppercase', letterSpacing: '.4px' }}>{k.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 850, color: k.cor, marginTop: 7 }}>{moeda(k.valor)}</div>
-            <div style={{ fontSize: 10, color: muted, marginTop: 4 }}>Somatório de todas as obras</div>
+          <div key={k.label} style={{ background: k.destaque ? (temaEscuro ? '#163b2b' : '#effaf3') : (cardBg || '#fff'), border: `1px solid ${k.destaque ? (temaEscuro ? '#286044' : '#bce8cb') : borda}`, borderRadius: 16, padding: 16, boxShadow: k.destaque ? '0 5px 18px rgba(22,163,74,.09)' : '0 3px 12px rgba(20,35,60,.035)' }}>
+            <div style={{ fontSize: 10, fontWeight: 850, color: muted, textTransform: 'uppercase', letterSpacing: '.55px' }}>{k.label}</div>
+            <div style={{ fontSize: 21, fontWeight: 900, color: k.cor, marginTop: 8, letterSpacing: '-.4px', overflowWrap: 'anywhere' }}>{moeda(k.valor)}</div>
+            <div style={{ fontSize: 10, color: muted, marginTop: 5 }}>{k.detalhe}</div>
           </div>
         ))}
       </section>
@@ -284,9 +286,11 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
                 <span style={{ background: bg, color, borderRadius: 20, padding: '5px 8px', fontSize: 10, fontWeight: 800 }}>{obra.status}</span>
               </div>
               <div style={{ marginTop: 12, fontSize: 12, color: muted }}>📍 {obra.endereco || 'Sem endereço'} • 📅 {obra.inicio || '—'} → {obra.previsao || '—'}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 14, padding: 12, borderRadius: 12, background: temaEscuro ? '#111827' : '#f8fafc' }}>
-                <div><div style={{ fontSize: 10, color: muted }}>VALOR CONTRATADO</div><strong>{moeda(obra.valor)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Custo: {moeda(obra.custo)}</div></div>
-                <div><div style={{ fontSize: 10, color: muted }}>RESULTADO APÓS DESPESAS</div><strong style={{ color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Recebido: {moeda(recebido)} • Falta: {moeda(saldoReceber(obra))}</div></div>
+              <div style={{ marginTop: 14, padding: 13, borderRadius: 13, background: temaEscuro ? '#111827' : '#f8fafc', border: `1px solid ${borda}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 9 }}><span style={{ fontSize: 10, color: muted, fontWeight: 800 }}>VALOR CONTRATADO</span><strong style={{ fontSize: 14 }}>{moeda(obra.valor)}</strong></div>
+                <div style={{ height: 8, borderRadius: 20, background: temaEscuro ? '#334155' : '#e2e8f0', overflow: 'hidden' }}><div style={{ height: '100%', width: `${Number(obra.valor) > 0 ? Math.min(100, (recebido / Number(obra.valor)) * 100) : 0}%`, borderRadius: 20, background: 'linear-gradient(90deg,#16a34a,#4ade80)' }} /></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginTop: 7, fontSize: 10 }}><span style={{ color: '#16a34a', fontWeight: 800 }}>Recebido: {moeda(recebido)}</span><span style={{ color: '#d97706', fontWeight: 800 }}>A receber: {moeda(saldoReceber(obra))}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 11, paddingTop: 9, borderTop: `1px solid ${borda}` }}><span style={{ fontSize: 10, color: muted }}>Resultado após despesas</span><strong style={{ fontSize: 13, color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong></div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                 <button onClick={() => { setFinanceiroObra(obra); setTipoLancamento('adiantamento'); limparFormularioLancamento(); setCategoriaDespesa('Outros'); setLancamentoData(new Date().toISOString().slice(0, 10)) }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
