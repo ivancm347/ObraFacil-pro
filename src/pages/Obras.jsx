@@ -13,6 +13,12 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
   const [lancamentoValor, setLancamentoValor] = useState('')
   const [lancamentoDescricao, setLancamentoDescricao] = useState('')
   const [lancamentoData, setLancamentoData] = useState(new Date().toISOString().slice(0, 10))
+  const [categoriaDespesa, setCategoriaDespesa] = useState('Outros')
+  const [colaborador, setColaborador] = useState('')
+  const [diasTrabalhados, setDiasTrabalhados] = useState('1')
+  const [valorDiaria, setValorDiaria] = useState('')
+  const [observacaoDespesa, setObservacaoDespesa] = useState('')
+  const [editandoDespesaId, setEditandoDespesaId] = useState(null)
 
   const moeda = formatarMoeda || (v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
   const text = temaEscuro ? '#e5e7eb' : '#172033'
@@ -108,10 +114,36 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     mostrarNotificacao?.(editando ? 'Obra atualizada!' : 'Obra cadastrada!')
   }
 
+  const iniciarEdicaoDespesa = item => {
+    setTipoLancamento('despesa')
+    setEditandoDespesaId(item.id)
+    setCategoriaDespesa(item.categoria || 'Outros')
+    setLancamentoDescricao(item.descricao || '')
+    setLancamentoData(item.data || new Date().toISOString().slice(0, 10))
+    setObservacaoDespesa(item.observacao || '')
+    setColaborador(item.colaborador || '')
+    setDiasTrabalhados(String(item.dias || 1))
+    setValorDiaria(String(item.valorDiaria || ''))
+    setLancamentoValor(String(item.valor || ''))
+  }
+
+  const limparFormularioLancamento = () => {
+    setLancamentoValor('')
+    setLancamentoDescricao('')
+    setObservacaoDespesa('')
+    setColaborador('')
+    setDiasTrabalhados('1')
+    setValorDiaria('')
+    setEditandoDespesaId(null)
+  }
+
   const registrarLancamento = e => {
     e.preventDefault()
     if (!financeiroObra) return
-    const valor = Number(String(lancamentoValor).replace(',', '.'))
+    const diaria = categoriaDespesa === 'Diária de colaborador' && tipoLancamento === 'despesa'
+    const dias = Number(String(diasTrabalhados).replace(',', '.'))
+    const taxaDiaria = Number(String(valorDiaria).replace(',', '.'))
+    const valor = diaria ? dias * taxaDiaria : Number(String(lancamentoValor).replace(',', '.'))
     if (tipoLancamento === 'pagamento' && orcamentoDaObra(financeiroObra)) {
       mostrarNotificacao?.('Esta obra está vinculada a um orçamento. Registre o recebimento no próprio orçamento para evitar duplicidade.')
       return
@@ -119,13 +151,20 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     if (!Number.isFinite(valor) || valor <= 0) { mostrarNotificacao?.('Informe um valor maior que zero.'); return }
     const chave = tipoLancamento === 'pagamento' ? 'pagamentos' : 'despesas'
     const lista = Array.isArray(financeiroObra[chave]) ? financeiroObra[chave] : []
-    const registroLancamento = { id: `fin-${Date.now()}`, valor: Math.round(valor * 100) / 100, descricao: lancamentoDescricao.trim() || (tipoLancamento === 'pagamento' ? 'Pagamento recebido' : 'Despesa da obra'), data: lancamentoData || new Date().toISOString().slice(0, 10) }
-    const atualizado = { ...financeiroObra, [chave]: [...lista, registroLancamento], atualizadoEm: new Date().toISOString() }
+    if (diaria && (!colaborador.trim() || !Number.isFinite(dias) || dias <= 0 || !Number.isFinite(taxaDiaria) || taxaDiaria <= 0)) { mostrarNotificacao?.('Informe o colaborador, os dias e o valor da diária.'); return }
+    const registroLancamento = {
+      id: editandoDespesaId || `fin-${Date.now()}`,
+      valor: Math.round(valor * 100) / 100,
+      descricao: diaria ? `Diária — ${colaborador.trim()}` : (lancamentoDescricao.trim() || (tipoLancamento === 'pagamento' ? 'Pagamento recebido' : 'Despesa da obra')),
+      data: lancamentoData || new Date().toISOString().slice(0, 10),
+      ...(tipoLancamento === 'despesa' ? { categoria: categoriaDespesa, observacao: observacaoDespesa.trim(), ...(diaria ? { colaborador: colaborador.trim(), dias, valorDiaria: Math.round(taxaDiaria * 100) / 100 } : {}) } : {})
+    }
+    const novaLista = editandoDespesaId && tipoLancamento === 'despesa' ? lista.map(item => item.id === editandoDespesaId ? registroLancamento : item) : [...lista, registroLancamento]
+    const atualizado = { ...financeiroObra, [chave]: novaLista, atualizadoEm: new Date().toISOString() }
     setObras(obras.map(o => o.id === atualizado.id ? atualizado : o))
     setFinanceiroObra(atualizado)
-    setLancamentoValor('')
-    setLancamentoDescricao('')
-    mostrarNotificacao?.(tipoLancamento === 'pagamento' ? 'Pagamento registrado!' : 'Despesa registrada!')
+    limparFormularioLancamento()
+    mostrarNotificacao?.(tipoLancamento === 'pagamento' ? 'Pagamento registrado!' : editandoDespesaId ? 'Despesa atualizada!' : 'Despesa registrada!')
   }
 
   const excluirLancamento = (tipo, id) => {
@@ -138,6 +177,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
     const atualizado = { ...financeiroObra, [chave]: (financeiroObra[chave] || []).filter(item => item.id !== id) }
     setObras(obras.map(o => o.id === atualizado.id ? atualizado : o))
     setFinanceiroObra(atualizado)
+    if (editandoDespesaId === id) limparFormularioLancamento()
     mostrarNotificacao?.('Lançamento excluído.')
   }
 
@@ -198,7 +238,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
                 <div><div style={{ fontSize: 10, color: muted }}>RESULTADO APÓS DESPESAS</div><strong style={{ color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Recebido: {moeda(recebido)} • Falta: {moeda(saldoReceber(obra))}</div></div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-                <button onClick={() => { setFinanceiroObra(obra); setTipoLancamento('pagamento'); setLancamentoValor(''); setLancamentoDescricao('') }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
+                <button onClick={() => { setFinanceiroObra(obra); setTipoLancamento('pagamento'); limparFormularioLancamento(); setCategoriaDespesa('Outros'); setLancamentoData(new Date().toISOString().slice(0, 10)) }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
                 <button onClick={() => abrirEdicao(obra)} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: temaEscuro ? '#263244' : '#e9eef5', fontWeight: 700, cursor: 'pointer' }}>✎ Editar</button>
                 <button onClick={() => excluir(obra.id)} style={{ border: 0, borderRadius: 9, padding: '10px 13px', background: '#fee2e2', color: '#b91c1c', cursor: 'pointer' }}>Excluir</button>
               </div>
@@ -219,17 +259,27 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
                 { label: 'Recebido total', valor: recebidoObra(financeiroObra), cor: '#16a34a' },
                 { label: 'Falta receber', valor: saldoReceber(financeiroObra), cor: '#d97706' },
                 { label: 'Despesas lançadas', valor: despesasObra(financeiroObra), cor: '#dc2626' },
+                { label: 'Resultado líquido', valor: recebidoObra(financeiroObra) - despesasObra(financeiroObra), cor: recebidoObra(financeiroObra) - despesasObra(financeiroObra) >= 0 ? '#16a34a' : '#dc2626' },
               ].map(k => <div key={k.label} style={{ border: `1px solid ${borda}`, borderRadius: 12, padding: 12 }}><div style={{ color: muted, fontSize: 10, fontWeight: 800 }}>{k.label.toUpperCase()}</div><div style={{ color: k.cor, fontWeight: 850, fontSize: 17, marginTop: 6 }}>{moeda(k.valor)}</div></div>)}
             </div>
             {orcamentoDaObra(financeiroObra) && <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: temaEscuro ? '#163b2b' : '#e8f8ef', color: temaEscuro ? '#bbf7d0' : '#166534', fontSize: 12 }}>Esta obra está vinculada ao orçamento #{orcamentoDaObra(financeiroObra).numero || ''}. Os recebimentos e o adiantamento são consultados automaticamente nele. Registre novos pagamentos na tela do orçamento; aqui você pode lançar despesas.</div>}
             <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: temaEscuro ? '#111827' : '#f8fafc' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>Registrar lançamento</h3>
+              <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>{editandoDespesaId ? 'Editar despesa' : 'Registrar lançamento'}</h3>
               <form onSubmit={registrarLancamento} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(145px,1fr))', gap: 10 }}>
-                <select value={tipoLancamento} onChange={e => setTipoLancamento(e.target.value)} style={inputStyle}><option value="pagamento" disabled={!!orcamentoDaObra(financeiroObra)}>Pagamento recebido{orcamentoDaObra(financeiroObra) ? ' (registrar no orçamento)' : ''}</option><option value="despesa">Despesa da obra</option></select>
-                <input required type="number" min="0.01" step="0.01" value={lancamentoValor} onChange={e => setLancamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="Valor R$" style={inputStyle} />
+                <select value={tipoLancamento} onChange={e => { setTipoLancamento(e.target.value); setEditandoDespesaId(null) }} style={inputStyle}><option value="pagamento" disabled={!!orcamentoDaObra(financeiroObra)}>Pagamento recebido{orcamentoDaObra(financeiroObra) ? ' (registrar no orçamento)' : ''}</option><option value="despesa">Despesa da obra</option></select>
+                {tipoLancamento === 'despesa' && <select value={categoriaDespesa} onChange={e => setCategoriaDespesa(e.target.value)} style={inputStyle}>{['Combustível', 'Alimentação / almoço', 'Café', 'Transporte', 'Materiais extras', 'Diária de colaborador', 'Ferramentas', 'Outros'].map(v => <option key={v}>{v}</option>)}</select>}
+                {tipoLancamento === 'despesa' && categoriaDespesa === 'Diária de colaborador' ? <>
+                  <input required value={colaborador} onChange={e => setColaborador(e.target.value)} placeholder="Nome do colaborador" style={inputStyle} />
+                  <input required type="number" min="0.5" step="0.5" value={diasTrabalhados} onChange={e => setDiasTrabalhados(e.target.value)} placeholder="Quantidade de dias" style={inputStyle} />
+                  <input required type="number" min="0.01" step="0.01" value={valorDiaria} onChange={e => setValorDiaria(e.target.value)} placeholder="Valor por diária R$" style={inputStyle} />
+                  <div style={{ padding: 11, borderRadius: 10, background: temaEscuro ? '#263244' : '#e8f8ef', fontWeight: 800, color: '#16a34a' }}>Total: {moeda((Number(diasTrabalhados) || 0) * (Number(valorDiaria) || 0))}</div>
+                </> : <input required type="number" min="0.01" step="0.01" value={lancamentoValor} onChange={e => setLancamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="Valor R$" style={inputStyle} />}
                 <input type="date" value={lancamentoData} onChange={e => setLancamentoData(e.target.value)} style={inputStyle} />
-                <input value={lancamentoDescricao} onChange={e => setLancamentoDescricao(e.target.value)} placeholder="Descrição (opcional)" style={inputStyle} />
-                <button type="submit" style={{ border: 0, borderRadius: 10, background: '#f05a28', color: '#fff', fontWeight: 800, padding: 11, cursor: 'pointer' }}>＋ Registrar</button>
+                {tipoLancamento === 'despesa' && <input value={lancamentoDescricao} onChange={e => setLancamentoDescricao(e.target.value)} placeholder="Descrição / detalhe" style={inputStyle} />}
+                {tipoLancamento === 'despesa' && <input value={observacaoDespesa} onChange={e => setObservacaoDespesa(e.target.value)} placeholder="Observação (opcional)" style={inputStyle} />}
+                {tipoLancamento === 'pagamento' && <input value={lancamentoDescricao} onChange={e => setLancamentoDescricao(e.target.value)} placeholder="Descrição (opcional)" style={inputStyle} />}
+                <button type="submit" style={{ border: 0, borderRadius: 10, background: '#f05a28', color: '#fff', fontWeight: 800, padding: 11, cursor: 'pointer' }}>{editandoDespesaId ? 'Salvar alteração' : '＋ Registrar'}</button>
+                {editandoDespesaId && <button type="button" onClick={limparFormularioLancamento} style={{ border: `1px solid ${borda}`, borderRadius: 10, background: 'transparent', color: text, padding: 10, cursor: 'pointer' }}>Cancelar edição</button>}
               </form>
             </div>
             {(() => {
@@ -239,7 +289,7 @@ export default function Obras({ obras = [], setObras, clientes = [], orcamentos 
             })().map(grupo => (
               <div key={grupo.tipo} style={{ marginTop: 18 }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{grupo.titulo}</h3>
-                {grupo.lista.length === 0 ? <div style={{ color: muted, fontSize: 12 }}>Nenhum lançamento ainda.</div> : grupo.lista.map(item => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: `1px solid ${borda}` }}><div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13 }}>{item.descricao}</div><div style={{ color: muted, fontSize: 11 }}>{item.data || 'Adiantamento cadastrado'}</div></div><strong style={{ color: grupo.tipo === 'pagamento' ? '#16a34a' : '#dc2626' }}>{moeda(item.valor)}</strong>{item.id !== 'adiantamento-inicial' && <button type="button" onClick={() => excluirLancamento(grupo.tipo, item.id)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#b91c1c', background: '#fee2e2', cursor: 'pointer' }}>Excluir</button>}</div>)}
+                {grupo.lista.length === 0 ? <div style={{ color: muted, fontSize: 12 }}>Nenhum lançamento ainda.</div> : grupo.lista.map(item => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: `1px solid ${borda}` }}><div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13 }}>{item.categoria ? `${item.categoria} — ` : ''}{item.descricao}</div><div style={{ color: muted, fontSize: 11 }}>{item.data || 'Adiantamento cadastrado'}{item.dias ? ` • ${item.dias} dia(s) × ${moeda(item.valorDiaria)}` : ''}{item.observacao ? ` • ${item.observacao}` : ''}</div></div><strong style={{ color: grupo.tipo === 'pagamento' ? '#16a34a' : '#dc2626' }}>{moeda(item.valor)}</strong>{grupo.tipo === 'despesa' && <button type="button" onClick={() => iniciarEdicaoDespesa(item)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#1d4ed8', background: '#dbeafe', cursor: 'pointer' }}>Editar</button>}{item.id !== 'adiantamento-inicial' && <button type="button" onClick={() => excluirLancamento(grupo.tipo, item.id)} style={{ border: 0, borderRadius: 8, padding: 7, color: '#b91c1c', background: '#fee2e2', cursor: 'pointer' }}>Excluir</button>}</div>)}
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}><button type="button" onClick={() => setFinanceiroObra(null)} style={{ border: 0, borderRadius: 10, background: '#f05a28', color: '#fff', padding: '11px 18px', fontWeight: 800, cursor: 'pointer' }}>Fechar</button></div>
