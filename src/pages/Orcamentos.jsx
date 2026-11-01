@@ -136,11 +136,14 @@ export default function Orcamentos({
   const calcularAdiantamento = (orc) => {
     const entradaLegada = Math.max(0, Number(orc.adiantamento) || 0)
     const entradas = Array.isArray(orc.adiantamentos) ? orc.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0
-    const pagamentos = Array.isArray(orc.pagamentos) ? orc.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0
-    return Math.min(Number(orc.total) || 0, entradaLegada + entradas + pagamentos)
+    return Math.min(Number(orc.total) || 0, entradaLegada + entradas)
   }
-  const calcularSaldo = (orc) => Math.max(0, (Number(orc.total) || 0) - calcularAdiantamento(orc))
-  const statusFinanceiro = (orc) => calcularSaldo(orc) <= 0.009 ? 'Quitado' : calcularAdiantamento(orc) > 0 ? 'Parcialmente pago' : 'Pendente'
+  const calcularPagamentos = (orc) => Array.isArray(orc.pagamentos)
+    ? orc.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0)
+    : 0
+  const calcularRecebido = (orc) => Math.min(Number(orc.total) || 0, calcularAdiantamento(orc) + calcularPagamentos(orc))
+  const calcularSaldo = (orc) => Math.max(0, (Number(orc.total) || 0) - calcularRecebido(orc))
+  const statusFinanceiro = (orc) => calcularSaldo(orc) <= 0.009 ? 'Quitado' : calcularRecebido(orc) > 0 ? 'Parcialmente pago' : 'Pendente'
   const estiloFinanceiro = (orc) => {
     const status = statusFinanceiro(orc)
     if (status === 'Quitado') return { background: temaEscuro ? '#143b2a' : '#dcfce7', color: '#166534' }
@@ -252,7 +255,9 @@ export default function Orcamentos({
       texto += `${idx+1}. ${it.nome} - ${it.quantidade}${it.unidade} x ${formatarMoeda(it.precoUnitario)} = ${formatarMoeda(it.subtotal)}%0A`
     })
     texto += `%0A*TOTAL: ${formatarMoeda(orc.total)}*%0A`
-    texto += `*VALOR ADIANTADO: ${formatarMoeda(calcularAdiantamento(orc))}*%0A`
+    texto += `*ADIANTAMENTOS: ${formatarMoeda(calcularAdiantamento(orc))}*%0A`
+    texto += `*PAGAMENTOS: ${formatarMoeda(calcularPagamentos(orc))}*%0A`
+    texto += `*TOTAL RECEBIDO: ${formatarMoeda(calcularRecebido(orc))}*%0A`
     texto += `*SALDO RESTANTE: ${formatarMoeda(calcularSaldo(orc))}*%0A`
     if (orc.observacoes) texto += `%0AObs: ${orc.observacoes}%0A`
     window.open(`https://wa.me/?text=${texto}`, '_blank')
@@ -331,7 +336,9 @@ export default function Orcamentos({
             <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Resumo financeiro</div>
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;">
               <span>Total: <b>${formatarMoeda(orc.total)}</b></span>
-              <span style="color:#15803d;">Adiantado: <b>${formatarMoeda(calcularAdiantamento(orc))}</b></span>
+              <span style="color:#7c3aed;">Adiantamentos: <b>${formatarMoeda(calcularAdiantamento(orc))}</b></span>
+              <span style="color:#15803d;">Pagamentos: <b>${formatarMoeda(calcularPagamentos(orc))}</b></span>
+              <span style="color:#15803d;">Total recebido: <b>${formatarMoeda(calcularRecebido(orc))}</b></span>
               <span>Saldo restante: <b>${formatarMoeda(calcularSaldo(orc))}</b></span>
             </div>
           </div>
@@ -341,7 +348,9 @@ export default function Orcamentos({
           </table>
           <div class="total">TOTAL: ${formatarMoeda(orc.total)}</div>
           ${historicoHtml}
-          <div style="margin-top:8px;font-size:14px;color:#166534;font-weight:700;">VALOR ADIANTADO: ${formatarMoeda(calcularAdiantamento(orc))}</div>
+          <div style="margin-top:8px;font-size:13px;color:#7c3aed;font-weight:700;">ADIANTAMENTOS: ${formatarMoeda(calcularAdiantamento(orc))}</div>
+          <div style="margin-top:5px;font-size:13px;color:#15803d;font-weight:700;">PAGAMENTOS RECEBIDOS: ${formatarMoeda(calcularPagamentos(orc))}</div>
+          <div style="margin-top:5px;font-size:13px;color:#15803d;font-weight:700;">TOTAL RECEBIDO: ${formatarMoeda(calcularRecebido(orc))}</div>
           <div style="margin-top:6px;font-size:17px;color:#111;font-weight:800;">SALDO RESTANTE: ${formatarMoeda(calcularSaldo(orc))}</div>
           ${orc.observacoes ? `<div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;"><b>Observações:</b><br/>${orc.observacoes}</div>` : ''}
           <div style="display:flex;gap:32px;margin-top:52px;page-break-inside:avoid;">
@@ -412,7 +421,7 @@ export default function Orcamentos({
               <div style={{ minWidth: '150px', textAlign: 'right' }}>
                 <div style={{ fontSize: '11px', opacity: 0.6, fontWeight: 700 }}>TOTAL</div>
                 <div style={{ fontWeight: 800, fontSize: '18px', color: '#F05A28' }}>{formatarMoeda(orc.total)}</div>
-                <div style={{ fontSize: '11px', color: '#16a34a', marginTop: '3px' }}>Adiantado: {formatarMoeda(calcularAdiantamento(orc))}</div>
+                <div style={{ fontSize: '11px', color: '#16a34a', marginTop: '3px' }}>Adiantamentos: {formatarMoeda(calcularAdiantamento(orc))}</div>
                 <div style={{ fontSize: '11px', opacity: 0.75 }}>Saldo: {formatarMoeda(calcularSaldo(orc))}</div>
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -587,7 +596,7 @@ export default function Orcamentos({
                   {(form.pagamentos || []).map((p, i) => <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}><span>{p.data ? new Date(`${p.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'} · {p.descricao || 'Pagamento / quitação'}</span><strong>{formatarMoeda(p.valor)}</strong></div>)}
                   {!(form.adiantamentos || []).length && !(form.pagamentos || []).length && !(Number(form.adiantamento) > 0) && <span style={{ fontSize: 12, opacity: .7 }}>Nenhum recebimento registrado na obra.</span>}
                 </div>
-                <div style={{ marginTop: 12, fontSize: 13, fontWeight: 800 }}>Total recebido: {formatarMoeda(calcularAdiantamento(form))}</div>
+                <div style={{ marginTop: 12, fontSize: 13, fontWeight: 800 }}>Total recebido: {formatarMoeda(calcularRecebido(form))}</div>
               </section>
             )}
 
