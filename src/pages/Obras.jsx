@@ -49,7 +49,19 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
   const sincronizarHistoricoOrcamento = obra => {
     if (!obra?.orcamentoId || !setOrcamentos) return
     const recebido = pagamentosDaObra(obra).total
-    setOrcamentos(orcamentos.map(o => o.id === obra.orcamentoId ? { ...o, adiantamento: obra.adiantamento || 0, adiantamentos: obra.adiantamentos || [], pagamentos: obra.pagamentos || [], saldoRestante: Math.max(0, Number(obra.valor || 0) - recebido) } : o))
+    // Atualização funcional evita perder lançamentos por usar uma lista antiga
+    // de orçamentos capturada antes do último recebimento.
+    setOrcamentos(listaAtual => (Array.isArray(listaAtual) ? listaAtual : orcamentos).map(o =>
+      String(o.id) === String(obra.orcamentoId)
+        ? {
+            ...o,
+            adiantamento: Number(obra.adiantamento || 0),
+            adiantamentos: Array.isArray(obra.adiantamentos) ? obra.adiantamentos : [],
+            pagamentos: Array.isArray(obra.pagamentos) ? obra.pagamentos : [],
+            saldoRestante: Math.max(0, Number(o.total ?? obra.valor ?? 0) - recebido)
+          }
+        : o
+    ))
   }
   const recebidoObra = obra => pagamentosDaObra(obra).total
   const despesasObra = obra => Array.isArray(obra.despesas) ? obra.despesas.reduce((s, d) => s + Number(d.valor || 0), 0) : 0
