@@ -292,6 +292,12 @@ export default function Orcamentos({
         </tr>
       `).join('')
 
+      const historicoRecebimentos = [
+        ...(Number(orc.adiantamento || 0) > 0 ? [{ data: orc.data, valor: orc.adiantamento, descricao: 'Entrada anterior' }] : []),
+        ...(Array.isArray(orc.adiantamentos) ? orc.adiantamentos.map(a => ({ data: a.data, valor: a.valor, descricao: [a.motivo || 'Adiantamento', a.observacao].filter(Boolean).join(' — ') })) : []),
+        ...(Array.isArray(orc.pagamentos) ? orc.pagamentos.map(p => ({ data: p.data, valor: p.valor, descricao: p.observacao || 'Pagamento recebido' })) : [])
+      ].map(r => `<tr><td style="padding:7px;border-bottom:1px solid #e5e7eb;">${r.data ? new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data não informada'}</td><td style="padding:7px;border-bottom:1px solid #e5e7eb;">${r.descricao}</td><td style="padding:7px;text-align:right;border-bottom:1px solid #e5e7eb;color:#15803d;font-weight:700;">${formatarMoeda(r.valor)}</td></tr>`).join('')
+      const historicoHtml = `<div style="margin-top:18px;"><h3 style="font-size:14px;">Histórico de recebimentos</h3><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="text-align:left;padding:7px;">DATA</th><th style="text-align:left;padding:7px;">DESCRIÇÃO</th><th style="text-align:right;padding:7px;">VALOR</th></tr></thead><tbody>${historicoRecebimentos || '<tr><td colspan="3" style="padding:8px;">Nenhum recebimento registrado.</td></tr>'}</tbody></table></div>`
       const marcaDagua = !licenciado ? `
         <div style="position:fixed;top:40%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;color:rgba(240,90,40,0.08);font-weight:900;pointer-events:none;z-index:0;">VERSÃO GRÁTIS</div>
       ` : ''
@@ -334,6 +340,7 @@ export default function Orcamentos({
             <tbody>${itensHtml}</tbody>
           </table>
           <div class="total">TOTAL: ${formatarMoeda(orc.total)}</div>
+          ${historicoHtml}
           <div style="margin-top:8px;font-size:14px;color:#166534;font-weight:700;">VALOR ADIANTADO: ${formatarMoeda(calcularAdiantamento(orc))}</div>
           <div style="margin-top:6px;font-size:17px;color:#111;font-weight:800;">SALDO RESTANTE: ${formatarMoeda(calcularSaldo(orc))}</div>
           ${orc.observacoes ? `<div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;"><b>Observações:</b><br/>${orc.observacoes}</div>` : ''}
