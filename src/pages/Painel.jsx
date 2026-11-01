@@ -65,7 +65,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     } catch (e) { if (e?.name !== 'AbortError') { console.error('Erro ao compartilhar:', e); window.prompt('Copie o link do ObraFácil PRO:', link) } }
     finally { setCompartilhandoApp(false) }
   }
-  const gerarRelatorioFinanceiro = () => {
+  const gerarRelatorioFinanceiro = (acao = 'visualizar') => {
     if (gerandoRelatorio) return
     setGerandoRelatorio(true)
     try {
@@ -109,21 +109,20 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       }
       secao('RECEBIMENTOS', recebimentos); secao('DESPESAS', despesas)
       pdf.setFontSize(8); pdf.setTextColor(130, 140, 150); pdf.text('Gerado em ' + agora.toLocaleString('pt-BR') + ' - conforme lançamentos cadastrados.', 14, Math.min(y + 4, 287))
-      const arquivoPDF = pdf.output('blob')
-      const urlPDF = URL.createObjectURL(arquivoPDF)
-      const janelaPDF = window.open(urlPDF, '_blank')
-      if (!janelaPDF) {
-        const link = document.createElement('a')
-        link.href = urlPDF
-        link.download = 'relatorio-financeiro-' + mesAtual + '.pdf'
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        alert('A visualização foi bloqueada pelo navegador. O PDF foi baixado; permita pop-ups para visualizar antes.')
+      if (acao === 'baixar') {
+        pdf.save('relatorio-financeiro-' + mesAtual + '.pdf')
       } else {
-        janelaPDF.document.title = 'Relatório financeiro - ' + mes
+        const arquivoPDF = pdf.output('blob')
+        const urlPDF = URL.createObjectURL(arquivoPDF)
+        const janelaPDF = window.open(urlPDF, '_blank')
+        if (!janelaPDF) {
+          URL.revokeObjectURL(urlPDF)
+          alert('A visualização foi bloqueada pelo navegador. Permita pop-ups para abrir o PDF.')
+        } else {
+          janelaPDF.document.title = 'Relatório financeiro - ' + mes
+          setTimeout(() => URL.revokeObjectURL(urlPDF), 60000)
+        }
       }
-      setTimeout(() => URL.revokeObjectURL(urlPDF), 60000)
     } catch (e) { console.error(e); alert('Não foi possível gerar o relatório. Tente novamente.') }
     finally { setGerandoRelatorio(false) }
   }
@@ -233,7 +232,10 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
         <div><h2 style={{ fontSize: 17, fontWeight: 800, margin: 0 }}>Financeiro</h2><p style={{ color: muted, fontSize: 12, margin: '5px 0 0' }}>Resumo calculado a partir dos adiantamentos e pagamentos registrados</p></div>
         <button onClick={() => btn('orcamentos')} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: dark ? '#27364b' : '#fff2ec', color: '#e85b25', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>Ver orçamentos →</button>
-        <button type="button" onClick={gerarRelatorioFinanceiro} disabled={gerandoRelatorio} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: '#f05a28', color: '#fff', fontWeight: 800, fontSize: 11, cursor: gerandoRelatorio ? 'wait' : 'pointer', opacity: gerandoRelatorio ? .7 : 1 }}>{gerandoRelatorio ? 'Gerando PDF...' : '↓ Relatório PDF do mês'}</button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => gerarRelatorioFinanceiro('visualizar')} disabled={gerandoRelatorio} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: '#f05a28', color: '#fff', fontWeight: 800, fontSize: 11, cursor: gerandoRelatorio ? 'wait' : 'pointer', opacity: gerandoRelatorio ? .7 : 1 }}>◉ Visualizar PDF</button>
+          <button type="button" onClick={() => gerarRelatorioFinanceiro('baixar')} disabled={gerandoRelatorio} style={{ border: '1px solid #f05a28', borderRadius: 10, padding: '10px 13px', background: 'transparent', color: '#f05a28', fontWeight: 800, fontSize: 11, cursor: gerandoRelatorio ? 'wait' : 'pointer', opacity: gerandoRelatorio ? .7 : 1 }}>↓ Baixar PDF</button>
+        </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(175px,1fr))', gap: 12 }}>
         <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
