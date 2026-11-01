@@ -109,7 +109,21 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       }
       secao('RECEBIMENTOS', recebimentos); secao('DESPESAS', despesas)
       pdf.setFontSize(8); pdf.setTextColor(130, 140, 150); pdf.text('Gerado em ' + agora.toLocaleString('pt-BR') + ' - conforme lançamentos cadastrados.', 14, Math.min(y + 4, 287))
-      pdf.save('relatorio-financeiro-' + mesAtual + '.pdf')
+      const arquivoPDF = pdf.output('blob')
+      const urlPDF = URL.createObjectURL(arquivoPDF)
+      const janelaPDF = window.open(urlPDF, '_blank')
+      if (!janelaPDF) {
+        const link = document.createElement('a')
+        link.href = urlPDF
+        link.download = 'relatorio-financeiro-' + mesAtual + '.pdf'
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        alert('A visualização foi bloqueada pelo navegador. O PDF foi baixado; permita pop-ups para visualizar antes.')
+      } else {
+        janelaPDF.document.title = 'Relatório financeiro - ' + mes
+      }
+      setTimeout(() => URL.revokeObjectURL(urlPDF), 60000)
     } catch (e) { console.error(e); alert('Não foi possível gerar o relatório. Tente novamente.') }
     finally { setGerandoRelatorio(false) }
   }
