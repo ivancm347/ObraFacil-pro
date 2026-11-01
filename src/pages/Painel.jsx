@@ -133,8 +133,8 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     } catch (e) { console.error(e); alert('Não foi possível gerar o relatório. Tente novamente.') }
     finally { setGerandoRelatorio(false) }
   }
-  const orcamentosComSaldo = orcamentos.filter(o => totalDoOrcamento(o) - totalPago(o) > 0.009).length
-  const situacaoFinanceira = (o) => totalDoOrcamento(o) - totalPago(o) <= 0.009 ? 'Quitado' : totalPago(o) > 0 ? 'Parcialmente pago' : 'Pendente'
+  const orcamentosComSaldo = orcamentos.filter(o => totalDoOrcamento(o) - totalPagoOrcamento(o) > 0.009).length
+  const situacaoFinanceira = (o) => totalDoOrcamento(o) - totalPagoOrcamento(o) <= 0.009 ? 'Quitado' : totalPagoOrcamento(o) > 0 ? 'Parcialmente pago' : 'Pendente'
   const corSituacaoFinanceira = (o) => {
     const status = situacaoFinanceira(o)
     if (status === 'Quitado') return { color: '#16834a', background: dark ? '#163b2b' : '#e8f8ef' }
