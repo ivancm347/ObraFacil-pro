@@ -464,7 +464,7 @@ export default function Orcamentos({
                 {!(Number(orcamentoSelecionado.adiantamento)>0) && !(orcamentoSelecionado.adiantamentos||[]).length && !(orcamentoSelecionado.pagamentos||[]).length && <p style={{margin:0,fontSize:13,opacity:.7}}>Nenhum recebimento registrado.</p>}
               </div>
               <div style={{ display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:8,fontSize:13 }}>
-                <span>Total recebido: <strong style={{color:'#16a34a'}}>{formatarMoeda(calcularAdiantamento(orcamentoSelecionado))}</strong></span>
+                <span>Total recebido: <strong style={{color:'#16a34a'}}>{formatarMoeda(calcularRecebido(orcamentoSelecionado))}</strong></span>
                 <span>Saldo restante: <strong style={{color:'#F05A28'}}>{formatarMoeda(calcularSaldo(orcamentoSelecionado))}</strong></span>
               </div>
             </section>
