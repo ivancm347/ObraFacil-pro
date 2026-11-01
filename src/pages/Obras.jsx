@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const NOVA_OBRA = { nome: '', clienteId: '', clienteNome: '', orcamentoId: '', orcamentoNumero: '', endereco: '', tipo: 'Reforma geral', status: 'Planejada', inicio: '', previsao: '', valor: '', custo: '', adiantamento: 0, adiantamentos: [], pagamentos: [], despesas: [], observacoes: '' }
 
@@ -36,6 +36,40 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
     if (!form.clienteId) return []
     return orcamentos.filter(o => o.clienteId === form.clienteId)
   }, [orcamentos, form.clienteId])
+
+  // Corrige registros antigos claramente identificados como adiantamento
+  // que versões anteriores gravaram por engano dentro de despesas.
+  useEffect(() => {
+    let houveCorrecao = false
+    const corrigidas = obras.map(obra => {
+      const despesasAtuais = Array.isArray(obra.despesas) ? obra.despesas : []
+      const adiantamentosAtuais = Array.isArray(obra.adiantamentos) ? obra.adiantamentos : []
+      const migraveis = despesasAtuais.filter(item => {
+        const texto = [item?.categoria, item?.descricao, item?.motivo, item?.observacao]
+          .filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+        return /\\badiantamento\\b|\\bentrada recebida\\b|\\bsinal recebido\\b/.test(texto)
+      })
+      if (!migraveis.length) return obra
+      houveCorrecao = true
+      const idsMigrados = new Set(migraveis.map(item => item.id).filter(Boolean))
+      const semDuplicar = migraveis.filter(item => !adiantamentosAtuais.some(a =>
+        (item.id && a.id === item.id) || (Number(a.valor) === Number(item.valor) && String(a.data || '') === String(item.data || '') && String(a.descricao || '').toLowerCase() === String(item.descricao || '').toLowerCase())
+      ))
+      return {
+        ...obra,
+        adiantamentos: [...adiantamentosAtuais, ...semDuplicar.map(item => ({ ...item, motivo: item.motivo || 'Adiantamento' }))],
+        despesas: despesasAtuais.filter(item => !idsMigrados.has(item.id)),
+        atualizadoEm: new Date().toISOString()
+      }
+    })
+    if (houveCorrecao) {
+      setObras(corrigidas)
+      corrigidas.forEach(obra => {
+        if (Array.isArray(obra.adiantamentos) && obra.adiantamentos.length) sincronizarHistoricoOrcamento(obra)
+      })
+      mostrarNotificacao?.('Adiantamentos antigos corrigidos e movidos para recebimentos.')
+    }
+  }, [obras])
 
   // A obra passa a ser a fonte oficial dos recebimentos.
   const orcamentoDaObra = obra => obra?.orcamentoId ? orcamentos.find(o => o.id === obra.orcamentoId) : null
