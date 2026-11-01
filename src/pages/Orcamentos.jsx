@@ -580,40 +580,16 @@ export default function Orcamentos({
 
             {modoModal === 'editar' && (
               <section style={{ marginTop: 18, padding: 16, borderRadius: 14, background: temaEscuro ? '#172554' : '#eff6ff', border: '1px solid #93c5fd' }}>
-                <strong style={{ display: 'block', marginBottom: 8 }}>Registrar novo adiantamento</strong>
-                <p style={{ margin: '0 0 10px', fontSize: 12, opacity: .75 }}>Registre uma nova entrada sem apagar os adiantamentos anteriores. O histórico continuará disponível em Ver orçamento.</p>
-                {(form.adiantamentos || []).length > 0 && <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>{form.adiantamentos.map((a, i) => <div key={a.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}><span>{a.data ? new Date(`${a.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'} · {a.motivo || 'Adiantamento'}</span><strong>{formatarMoeda(a.valor)}</strong></div>)}</div>}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'end' }}>
-                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Data</label><input type="date" value={adiantamentoData} onChange={e => setAdiantamentoData(e.target.value)} style={inputStyle()} /></div>
-                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Valor (R$)</label><input type="number" min="0.01" step="0.01" value={adiantamentoValor} onChange={e => setAdiantamentoValor(e.target.value)} onFocus={e => e.currentTarget.select()} placeholder="0,00" style={inputStyle()} /></div>
-                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Motivo</label><select value={adiantamentoMotivo} onChange={e => setAdiantamentoMotivo(e.target.value)} style={inputStyle()}>{['Compra de material','Início da obra','Mão de obra','Equipamentos','Outra finalidade'].map(x => <option key={x}>{x}</option>)}</select></div>
-                  <div><label style={{ ...labelStyle, marginTop: 0 }}>Observação</label><input value={adiantamentoObs} onChange={e => setAdiantamentoObs(e.target.value)} placeholder="Detalhe (opcional)" style={inputStyle()} /></div>
-                  <button type="button" onClick={registrarAdiantamentoNaEdicao} style={{ padding: '12px 14px', border: 0, borderRadius: 10, background: '#2563eb', color: '#fff', fontWeight: 700, minHeight: 44 }}>+ Registrar adiantamento</button>
+                <strong style={{ display: 'block', marginBottom: 8 }}>Histórico financeiro — somente leitura</strong>
+                <p style={{ margin: '0 0 10px', fontSize: 12, opacity: .75 }}>Adiantamentos e pagamentos são registrados exclusivamente na área Obras. Este orçamento apenas exibe os valores já lançados.</p>
+                <div style={{ display: 'grid', gap: 7 }}>
+                  {(form.adiantamentos || []).map((a, i) => <div key={a.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}><span>{a.data ? new Date(`${a.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'} · {a.motivo || 'Adiantamento'}</span><strong>{formatarMoeda(a.valor)}</strong></div>)}
+                  {(form.pagamentos || []).map((p, i) => <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}><span>{p.data ? new Date(`${p.data}T12:00:00`).toLocaleDateString('pt-BR') : 'Data não informada'} · {p.descricao || 'Pagamento / quitação'}</span><strong>{formatarMoeda(p.valor)}</strong></div>)}
+                  {!(form.adiantamentos || []).length && !(form.pagamentos || []).length && !(Number(form.adiantamento) > 0) && <span style={{ fontSize: 12, opacity: .7 }}>Nenhum recebimento registrado na obra.</span>}
                 </div>
-                <div style={{ marginTop: 10, fontSize: 12 }}>Saldo disponível para adiantamento: <strong>{formatarMoeda(Math.max(0, calcularTotal(form.itens) - Math.min(calcularTotal(form.itens), (Number(form.adiantamento) || 0) + (form.adiantamentos || []).reduce((s, a) => s + (Number(a.valor) || 0), 0) + (form.pagamentos || []).reduce((s, p) => s + (Number(p.valor) || 0), 0))))}</strong></div>
+                <div style={{ marginTop: 12, fontSize: 13, fontWeight: 800 }}>Total recebido: {formatarMoeda(calcularAdiantamento(form))}</div>
               </section>
             )}
-
-            <div style={{ marginTop: '18px', padding: '16px', borderRadius: '14px', background: temaEscuro ? '#0f172a' : '#f0fdf4', border: '1px solid #86efac' }}>
-              <label style={{ ...labelStyle, marginTop: 0, opacity: 1, color: temaEscuro ? '#86efac' : '#166534' }}>Valor adiantado / entrada (R$)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.adiantamento ?? ''}
-                onChange={e => setForm({ ...form, adiantamento: e.target.value === '' ? '' : Math.max(0, Number(e.target.value) || 0) })}
-                onFocus={e => e.currentTarget.select()}
-                onBlur={() => setForm(f => ({ ...f, adiantamento: Math.max(0, Number(f.adiantamento) || 0) }))}
-                placeholder="0,00"
-                style={inputStyle({ fontSize: '18px', fontWeight: 700 })}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '12px', fontSize: '13px' }}>
-                <span>Total: <strong>{formatarMoeda(calcularTotal(form.itens))}</strong></span>
-                <span style={{ color: '#16a34a' }}>Adiantado: <strong>{formatarMoeda(Math.min(calcularTotal(form.itens), Number(form.adiantamento) || 0))}</strong></span>
-                <span style={{ color: '#F05A28' }}>Saldo restante: <strong>{formatarMoeda(Math.max(0, calcularTotal(form.itens) - (Number(form.adiantamento) || 0)))}</strong></span>
-              </div>
-              <small style={{ display: 'block', marginTop: '8px', opacity: 0.65 }}>O valor adiantado não pode ultrapassar o total do orçamento quando você salvar.</small>
-            </div>
 
             <label style={labelStyle}>Observações</label>
             <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} placeholder="Ex: Validade 7 dias, material incluso..."
