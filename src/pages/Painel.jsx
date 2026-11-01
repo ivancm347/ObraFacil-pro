@@ -37,22 +37,28 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const pendentes = orcamentos.filter(o => ['pendente', 'em análise', 'em analise'].includes(String(o.status || 'pendente').toLowerCase()))
   const aprovados = orcamentos.filter(o => String(o.status || '').toLowerCase().includes('aprov'))
   const totalDoOrcamento = (o) => Math.max(0, Number(o.total || (o.itens || []).reduce((a, i) => a + Number(i.subtotal || Number(i.quantidade || 0) * Number(i.preco || 0)), 0)) || 0)
-  const totalPago = (o) => Math.min(totalDoOrcamento(o), Math.max(0, Number(o.adiantamento) || 0) + (Array.isArray(o.adiantamentos) ? o.adiantamentos.reduce((s, a) => s + Math.max(0, Number(a.valor) || 0), 0) : 0) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((s, p) => s + Math.max(0, Number(p.valor) || 0), 0) : 0))
-  const saldoAReceber = orcamentos.reduce((s, o) => s + Math.max(0, totalDoOrcamento(o) - totalPago(o)), 0)
-  const totalRecebidoOrcamentos = orcamentos.reduce((s, o) => s + totalPago(o), 0)
-  // Obras sem orçamento vinculado têm recebimentos próprios; as vinculadas já estão somadas acima.
-  const recebidoObrasAvulsas = obras.filter(o => !o.orcamentoId).reduce((s, o) => s + Math.max(0, Number(o.adiantamento || 0)) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((v, p) => v + Math.max(0, Number(p.valor || 0)), 0) : 0), 0)
-  const totalRecebido = totalRecebidoOrcamentos + recebidoObrasAvulsas
+  const totalPagoOrcamento = (o) => Math.max(0, Number(o.adiantamento || 0)) + (Array.isArray(o.adiantamentos) ? o.adiantamentos.reduce((s,a)=>s+Math.max(0,Number(a.valor)||0),0) : 0) + (Array.isArray(o.pagamentos) ? o.pagamentos.reduce((s,p)=>s+Math.max(0,Number(p.valor)||0),0) : 0)
+  const idsOrcamentosVinculados = new Set(obras.filter(o=>o.orcamentoId).map(o=>o.orcamentoId))
+  const recebidoObra = (o) => Math.max(0,Number(o.adiantamento||0)) + (Array.isArray(o.adiantamentos)?o.adiantamentos.reduce((s,a)=>s+Math.max(0,Number(a.valor)||0),0):0) + (Array.isArray(o.pagamentos)?o.pagamentos.reduce((s,p)=>s+Math.max(0,Number(p.valor)||0),0):0)
+  const totalRecebido = obras.reduce((s,o)=>s+recebidoObra(o),0)
+    + orcamentos.filter(o=>!idsOrcamentosVinculados.has(o.id)).reduce((s,o)=>s+totalPagoOrcamento(o),0)
+  const saldoAReceber = obras.reduce((s,o)=>s+Math.max(0,Number(o.valor||0)-recebidoObra(o)),0)
+    + orcamentos.filter(o=>!idsOrcamentosVinculados.has(o.id)).reduce((s,o)=>s+Math.max(0,totalDoOrcamento(o)-totalPagoOrcamento(o)),0)
   const totalDespesasObras = obras.reduce((s, o) => s + (Array.isArray(o.despesas) ? o.despesas.reduce((v, d) => v + Math.max(0, Number(d.valor || 0)), 0) : 0), 0)
   const resultadoLiquidoGeral = totalRecebido - totalDespesasObras
   const mesAtual = new Date().toISOString().slice(0, 7)
   const despesasNoMes = obras.reduce((s, o) => s + (Array.isArray(o.despesas) ? o.despesas.filter(d => String(d.data || '').startsWith(mesAtual)).reduce((v, d) => v + Math.max(0, Number(d.valor || 0)), 0) : 0), 0)
-  const recebidoNoMes = orcamentos.reduce((s, o) => {
-    const entradaInicial = String(o.data || '').startsWith(mesAtual) ? Math.max(0, Number(o.adiantamento) || 0) : 0
-    const adiantamentosMes = Array.isArray(o.adiantamentos) ? o.adiantamentos.filter(a => String(a.data || '').startsWith(mesAtual)).reduce((v, a) => v + Math.max(0, Number(a.valor) || 0), 0) : 0
-    const parcelasMes = Array.isArray(o.pagamentos) ? o.pagamentos.filter(p => String(p.data || '').startsWith(mesAtual)).reduce((v, p) => v + Math.max(0, Number(p.valor) || 0), 0) : 0
-    return s + entradaInicial + adiantamentosMes + parcelasMes
-  }, 0)
+  const recebidoNoMes = obras.reduce((s,o)=>{
+    const inicial = String(o.data||'').startsWith(mesAtual) ? Math.max(0,Number(o.adiantamento||0)) : 0
+    const adi = Array.isArray(o.adiantamentos)?o.adiantamentos.filter(a=>String(a.data||'').startsWith(mesAtual)).reduce((v,a)=>v+Math.max(0,Number(a.valor)||0),0):0
+    const pags = Array.isArray(o.pagamentos)?o.pagamentos.filter(p=>String(p.data||'').startsWith(mesAtual)).reduce((v,p)=>v+Math.max(0,Number(p.valor)||0),0):0
+    return s+inicial+adi+pags
+  },0) + orcamentos.filter(o=>!idsOrcamentosVinculados.has(o.id)).reduce((s,o)=>{
+    const inicial=String(o.data||'').startsWith(mesAtual)?Math.max(0,Number(o.adiantamento||0)):0
+    const adi=Array.isArray(o.adiantamentos)?o.adiantamentos.filter(a=>String(a.data||'').startsWith(mesAtual)).reduce((v,a)=>v+Math.max(0,Number(a.valor)||0),0):0
+    const pags=Array.isArray(o.pagamentos)?o.pagamentos.filter(p=>String(p.data||'').startsWith(mesAtual)).reduce((v,p)=>v+Math.max(0,Number(p.valor)||0),0):0
+    return s+inicial+adi+pags
+  },0)
   const compartilharApp = async () => {
     if (compartilhandoApp) return
     setCompartilhandoApp(true)
@@ -75,14 +81,15 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       const recebimentos = []
       const despesas = []
       const adicionar = (data, descricao, valor) => { const v = Math.max(0, Number(valor) || 0); if (v > 0 && String(data || '').startsWith(mesAtual)) recebimentos.push({ data, descricao, valor: v }) }
-      orcamentos.forEach(o => {
-        adicionar(o.data, 'Adiantamento - Orçamento ' + (o.numero || o.clienteNome || ''), o.adiantamento)
+      obras.forEach(o => {
+        adicionar(o.data, 'Entrada - ' + (o.nome || o.titulo || 'Obra'), o.adiantamento)
+        ;(Array.isArray(o.adiantamentos) ? o.adiantamentos : []).forEach(a => adicionar(a.data, 'Adiantamento - ' + (o.nome || o.titulo || 'Obra'), a.valor))
+        ;(Array.isArray(o.pagamentos) ? o.pagamentos : []).forEach(p => adicionar(p.data, 'Pagamento - ' + (o.nome || o.titulo || 'Obra'), p.valor))
+      })
+      orcamentos.filter(o => !idsOrcamentosVinculados.has(o.id)).forEach(o => {
+        adicionar(o.data, 'Entrada - Orçamento ' + (o.numero || o.clienteNome || ''), o.adiantamento)
         ;(Array.isArray(o.adiantamentos) ? o.adiantamentos : []).forEach(a => adicionar(a.data, 'Adiantamento - ' + (o.clienteNome || 'Orçamento'), a.valor))
         ;(Array.isArray(o.pagamentos) ? o.pagamentos : []).forEach(p => adicionar(p.data, 'Pagamento - ' + (o.clienteNome || 'Orçamento'), p.valor))
-      })
-      obras.filter(o => !o.orcamentoId).forEach(o => {
-        adicionar(o.data, 'Entrada - ' + (o.nome || o.titulo || 'Obra'), o.adiantamento)
-        ;(Array.isArray(o.pagamentos) ? o.pagamentos : []).forEach(p => adicionar(p.data, 'Pagamento - ' + (o.nome || o.titulo || 'Obra'), p.valor))
       })
       obras.forEach(o => (Array.isArray(o.despesas) ? o.despesas : []).forEach(d => { if (String(d.data || '').startsWith(mesAtual) && Number(d.valor) > 0) despesas.push({ data: d.data, descricao: (o.nome || o.titulo || 'Obra') + ' - ' + (d.categoria || d.descricao || 'Despesa'), valor: Number(d.valor) }) }))
       const totalEntradas = recebimentos.reduce((s, x) => s + x.valor, 0)
