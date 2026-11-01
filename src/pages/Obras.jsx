@@ -9,7 +9,7 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(NOVA_OBRA)
   const [financeiroObra, setFinanceiroObra] = useState(null)
-  const [tipoLancamento, setTipoLancamento] = useState('pagamento')
+  const [tipoLancamento, setTipoLancamento] = useState('adiantamento')
   const [lancamentoValor, setLancamentoValor] = useState('')
   const [lancamentoDescricao, setLancamentoDescricao] = useState('')
   const [lancamentoData, setLancamentoData] = useState(new Date().toISOString().slice(0, 10))
@@ -243,7 +243,7 @@ export default function Obras({ obras = [], setObras, setOrcamentos, clientes = 
                 <div><div style={{ fontSize: 10, color: muted }}>RESULTADO APÓS DESPESAS</div><strong style={{ color: margem >= 0 ? '#16a34a' : '#dc2626' }}>{moeda(margem)}</strong><div style={{ fontSize: 10, color: muted, marginTop: 5 }}>Recebido: {moeda(recebido)} • Falta: {moeda(saldoReceber(obra))}</div></div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-                <button onClick={() => { setFinanceiroObra(obra); setTipoLancamento('pagamento'); limparFormularioLancamento(); setCategoriaDespesa('Outros'); setLancamentoData(new Date().toISOString().slice(0, 10)) }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
+                <button onClick={() => { setFinanceiroObra(obra); setTipoLancamento('adiantamento'); limparFormularioLancamento(); setCategoriaDespesa('Outros'); setLancamentoData(new Date().toISOString().slice(0, 10)) }} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: '#dcfce7', color: '#166534', fontWeight: 800, cursor: 'pointer' }}>💰 Financeiro</button>
                 <button onClick={() => abrirEdicao(obra)} style={{ flex: 1, border: 0, borderRadius: 9, padding: 10, background: temaEscuro ? '#263244' : '#e9eef5', fontWeight: 700, cursor: 'pointer' }}>✎ Editar</button>
                 <button onClick={() => excluir(obra.id)} style={{ border: 0, borderRadius: 9, padding: '10px 13px', background: '#fee2e2', color: '#b91c1c', cursor: 'pointer' }}>Excluir</button>
               </div>
