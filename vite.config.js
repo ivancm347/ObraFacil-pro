@@ -10,21 +10,23 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifestFilename: 'pwa-manifest.webmanifest',
-      includeAssets: ['favicon.ico', 'favicon-32.png', 'apple-touch-icon.png'],
+      // O manifesto é gerado pelo plugin. Os ícones SVG ficam em public/.
+      includeAssets: ['obrafacil-logo.svg'],
       manifest: {
+        id: '/ObraFacil-pro/',
         name: 'ObraFácil PRO - Orçamentos de Obra',
         short_name: 'ObraFácil',
         description: 'Gestão de orçamentos de obra, drywall e gesso',
+        lang: 'pt-BR',
         theme_color: '#F05A28',
-        background_color: '#f6f7fb',
+        background_color: '#101827',
         display: 'standalone',
         scope: '/ObraFacil-pro/',
         start_url: '/ObraFacil-pro/',
         orientation: 'portrait-primary',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          { src: 'obrafacil-logo.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: 'obrafacil-logo.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
         ]
       },
       workbox: {
