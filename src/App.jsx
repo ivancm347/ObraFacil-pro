@@ -468,7 +468,7 @@ export default function App() {
         {pagina === 'orcamentos' && <Orcamentos {...{ orcamentos, setOrcamentos, produtos, clientes, empresa, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border, licenciado: acessoPro } } />}
         {pagina === 'produtos' && <Produtos {...{ produtos, setProdutos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'clientes' && <Clientes {...{ clientes, setClientes, orcamentos, mostrarNotificacao, temaEscuro, cardBg, border } } />}
-        {pagina === 'obras' && <Obras {...{ obras, setObras, clientes, orcamentos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
+        {pagina === 'obras' && <Obras {...{ obras, setObras, setOrcamentos, clientes, orcamentos, mostrarNotificacao, formatarMoeda, temaEscuro, cardBg, border } } />}
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
         {pagina === 'ofertas' && isAdmin && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'gerenciar-clientes' && isAdmin && <GerenciarClientes {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
