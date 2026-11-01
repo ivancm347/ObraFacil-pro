@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Icon from '../components/Icon.jsx'
+import { jsPDF } from 'jspdf'
 import { supabase, supabaseConfigured } from '../lib/supabase.js'
 
 const money = (n, formatarMoeda) => formatarMoeda ? formatarMoeda(Number(n) || 0) : (Number(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -9,6 +10,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
   const [ofertasDestaque, setOfertasDestaque] = useState([])
   const [indiceOferta, setIndiceOferta] = useState(0)
   const [funcionalidadeAberta, setFuncionalidadeAberta] = useState(null)
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false)
   useEffect(() => {
     if (ofertasDestaque.length < 2) return
     const intervalo = setInterval(() => {
@@ -50,6 +52,54 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
     const parcelasMes = Array.isArray(o.pagamentos) ? o.pagamentos.filter(p => String(p.data || '').startsWith(mesAtual)).reduce((v, p) => v + Math.max(0, Number(p.valor) || 0), 0) : 0
     return s + entradaInicial + adiantamentosMes + parcelasMes
   }, 0)
+  const gerarRelatorioFinanceiro = () => {
+    if (gerandoRelatorio) return
+    setGerandoRelatorio(true)
+    try {
+      const pdf = new jsPDF()
+      const agora = new Date()
+      const mes = agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+      const recebimentos = []
+      const despesas = []
+      const adicionar = (data, descricao, valor) => { const v = Math.max(0, Number(valor) || 0); if (v > 0 && String(data || '').startsWith(mesAtual)) recebimentos.push({ data, descricao, valor: v }) }
+      orcamentos.forEach(o => {
+        adicionar(o.data, 'Adiantamento - Orçamento ' + (o.numero || o.clienteNome || ''), o.adiantamento)
+        ;(Array.isArray(o.adiantamentos) ? o.adiantamentos : []).forEach(a => adicionar(a.data, 'Adiantamento - ' + (o.clienteNome || 'Orçamento'), a.valor))
+        ;(Array.isArray(o.pagamentos) ? o.pagamentos : []).forEach(p => adicionar(p.data, 'Pagamento - ' + (o.clienteNome || 'Orçamento'), p.valor))
+      })
+      obras.filter(o => !o.orcamentoId).forEach(o => {
+        adicionar(o.data, 'Entrada - ' + (o.nome || o.titulo || 'Obra'), o.adiantamento)
+        ;(Array.isArray(o.pagamentos) ? o.pagamentos : []).forEach(p => adicionar(p.data, 'Pagamento - ' + (o.nome || o.titulo || 'Obra'), p.valor))
+      })
+      obras.forEach(o => (Array.isArray(o.despesas) ? o.despesas : []).forEach(d => { if (String(d.data || '').startsWith(mesAtual) && Number(d.valor) > 0) despesas.push({ data: d.data, descricao: (o.nome || o.titulo || 'Obra') + ' - ' + (d.categoria || d.descricao || 'Despesa'), valor: Number(d.valor) }) }))
+      const totalEntradas = recebimentos.reduce((s, x) => s + x.valor, 0)
+      const totalSaidas = despesas.reduce((s, x) => s + x.valor, 0)
+      const fmt = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      let y = 18
+      pdf.setFillColor(20, 35, 58); pdf.rect(0, 0, 210, 38, 'F')
+      pdf.setTextColor(255, 255, 255); pdf.setFontSize(18); pdf.setFont('helvetica', 'bold'); pdf.text('ObraFácil PRO', 14, 17)
+      pdf.setFontSize(11); pdf.setFont('helvetica', 'normal'); pdf.text('Relatório financeiro - ' + mes, 14, 27)
+      y = 49; pdf.setTextColor(30, 41, 59); pdf.setFontSize(11); pdf.setFont('helvetica', 'bold'); pdf.text('RESUMO DO PERÍODO', 14, y); y += 9
+      pdf.setFont('helvetica', 'normal'); pdf.text('Recebimentos: ' + fmt(totalEntradas), 14, y); y += 7; pdf.text('Despesas: ' + fmt(totalSaidas), 14, y); y += 7
+      pdf.setFont('helvetica', 'bold'); pdf.text('Resultado do mês: ' + fmt(totalEntradas - totalSaidas), 14, y); y += 13
+      const secao = (titulo, itens) => {
+        if (y > 255) { pdf.addPage(); y = 18 }
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12); pdf.setTextColor(240, 90, 40); pdf.text(titulo, 14, y); y += 8
+        if (!itens.length) { pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(80, 90, 105); pdf.text('Nenhum lançamento neste período.', 14, y); y += 10; return }
+        itens.sort((a,b) => String(a.data).localeCompare(String(b.data))).forEach(item => {
+          if (y > 278) { pdf.addPage(); y = 18 }
+          const dt = item.data ? new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem data'
+          const linhas = pdf.splitTextToSize(dt + '  ' + item.descricao, 130)
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(80, 90, 105); pdf.text(linhas, 14, y)
+          pdf.setFont('helvetica', 'bold'); pdf.text(fmt(item.valor), 196, y, { align: 'right' }); y += Math.max(7, linhas.length * 4.5)
+        }); y += 5
+      }
+      secao('RECEBIMENTOS', recebimentos); secao('DESPESAS', despesas)
+      pdf.setFontSize(8); pdf.setTextColor(130, 140, 150); pdf.text('Gerado em ' + agora.toLocaleString('pt-BR') + ' - conforme lançamentos cadastrados.', 14, Math.min(y + 4, 287))
+      pdf.save('relatorio-financeiro-' + mesAtual + '.pdf')
+    } catch (e) { console.error(e); alert('Não foi possível gerar o relatório. Tente novamente.') }
+    finally { setGerandoRelatorio(false) }
+  }
   const orcamentosComSaldo = orcamentos.filter(o => totalDoOrcamento(o) - totalPago(o) > 0.009).length
   const situacaoFinanceira = (o) => totalDoOrcamento(o) - totalPago(o) <= 0.009 ? 'Quitado' : totalPago(o) > 0 ? 'Parcialmente pago' : 'Pendente'
   const corSituacaoFinanceira = (o) => {
@@ -155,6 +205,7 @@ export default function Painel({ produtos = [], clientes = [], orcamentos = [], 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
         <div><h2 style={{ fontSize: 17, fontWeight: 800, margin: 0 }}>Financeiro</h2><p style={{ color: muted, fontSize: 12, margin: '5px 0 0' }}>Resumo calculado a partir dos adiantamentos e pagamentos registrados</p></div>
         <button onClick={() => btn('orcamentos')} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: dark ? '#27364b' : '#fff2ec', color: '#e85b25', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>Ver orçamentos →</button>
+        <button type="button" onClick={gerarRelatorioFinanceiro} disabled={gerandoRelatorio} style={{ border: 0, borderRadius: 10, padding: '10px 13px', background: '#f05a28', color: '#fff', fontWeight: 800, fontSize: 11, cursor: gerandoRelatorio ? 'wait' : 'pointer', opacity: gerandoRelatorio ? .7 : 1 }}>{gerandoRelatorio ? 'Gerando PDF...' : '↓ Relatório PDF do mês'}</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(175px,1fr))', gap: 12 }}>
         <div style={{ padding: 16, borderRadius: 14, background: dark ? '#1d2a3e' : '#f0faf4', border: `1px solid ${dark ? '#284b3b' : '#d5f0df'}` }}>
