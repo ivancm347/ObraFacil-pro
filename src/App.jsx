@@ -341,6 +341,17 @@ export default function App() {
       }
 
       if (data?.payload && typeof data.payload === 'object') {
+        const cacheLocal = lerLocalUsuario(usuario.id)
+        const baseAnterior = localStorage.getItem(chaveBaseNuvem(usuario.id))
+        // Sem uma base anterior não é possível saber se o cache contém mudanças offline.
+        // Preserva o cache e bloqueia o envio automático em vez de apagar dados potencialmente novos.
+        if (!baseAnterior && cacheLocal) {
+          aplicarDados(cacheLocal)
+          setCloudReady(false)
+          setAuthErro('Há dados locais sem histórico de sincronização. Eles foram preservados; compare com a nuvem antes de liberar a sincronização.')
+          setDadosCarregados(true)
+          return
+        }
         aplicarDados(data.payload)
         try { localStorage.setItem(chaveBaseNuvem(usuario.id), serializarDados(data.payload)) } catch {}
       } else {
