@@ -465,8 +465,15 @@ export default function App() {
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' })
       if (error) {
-        setAuthErro('A gravação na nuvem falhou. Seus dados continuam salvos neste navegador; verifique a conexão e as políticas do Supabase.')
+        // Marca a nuvem como indisponível: ao reconectar, a rotina protegida
+        // compara o cache local com a última cópia confirmada antes de reenviar.
+        setCloudReady(false)
+        setAuthErro('A gravação na nuvem falhou. Seus dados continuam salvos neste navegador; ao reconectar, tentarei sincronizar sem sobrescrever alterações remotas.')
       } else {
+        // Atualiza a referência somente depois de confirmar a gravação remota.
+        try {
+          localStorage.setItem(chaveBaseNuvem(usuario.id), serializarDados(payload))
+        } catch {}
         setAuthErro('')
       }
     }, 700)
