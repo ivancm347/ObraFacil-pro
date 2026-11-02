@@ -191,6 +191,8 @@ export default function App() {
   const [authPronto, setAuthPronto] = useState(!supabaseConfigured)
   const [dadosCarregados, setDadosCarregados] = useState(false)
   const [cloudReady, setCloudReady] = useState(false)
+  const [estaOnline, setEstaOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  const [tentativaSync, setTentativaSync] = useState(0)
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [modoAuth, setModoAuth] = useState('login')
@@ -293,6 +295,20 @@ export default function App() {
   }, [usuario])
 
   useEffect(() => {
+    const atualizarConexao = () => {
+      const online = navigator.onLine
+      setEstaOnline(online)
+      if (online) setTentativaSync(valor => valor + 1)
+    }
+    window.addEventListener('online', atualizarConexao)
+    window.addEventListener('offline', atualizarConexao)
+    return () => {
+      window.removeEventListener('online', atualizarConexao)
+      window.removeEventListener('offline', atualizarConexao)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!supabaseConfigured || !authPronto || !usuario) return
     let ativo = true
     setDadosCarregados(false)
@@ -386,7 +402,7 @@ export default function App() {
       }
     }, 700)
     return () => clearTimeout(temporizador)
-  }, [produtos, clientes, orcamentos, obras, empresa, usuario, cloudReady, dadosCarregados])
+  }, [produtos, clientes, orcamentos, obras, empresa, usuario, cloudReady, dadosCarregados, tentativaSync])
 
   const entrarOuCadastrar = async (evento) => {
     evento.preventDefault()
@@ -457,7 +473,7 @@ export default function App() {
       <header style={{ height: 64, background: cardBg, borderBottom: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 42, height: 42, borderRadius: 13, background: '#101827', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 5px 14px rgba(234,88,12,.25)' }}><img src="./obrafacil-logo.svg" alt="ObraFácil PRO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-          <div><div style={{ fontWeight: 800, letterSpacing: '-.5px', fontFamily: "'Sora', sans-serif" }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL <span style={{ color: '#64748b', fontSize: 11 }}>PRO</span></div><div style={{ fontSize: 10, opacity: 0.62, marginTop: 3 }}>GESTÃO DE OBRAS · {produtos.length} PRODUTOS{!supabaseConfigured ? ' · MODO LOCAL' : usuario ? (cloudReady ? (authErro ? ' · NUVEM COM AVISO' : ' · NUVEM SINCRONIZADA') : ' · SINCRONIZANDO') : ' · MODO LOCAL · CONTA OPCIONAL'}</div></div>
+          <div><div style={{ fontWeight: 800, letterSpacing: '-.5px', fontFamily: "'Sora', sans-serif" }}><span style={{ color: '#F05A28' }}>OBRA</span>FÁCIL <span style={{ color: '#64748b', fontSize: 11 }}>PRO</span></div><div style={{ fontSize: 10, opacity: 0.62, marginTop: 3 }}>{!estaOnline ? '● OFFLINE · DADOS SALVOS NESTE APARELHO · ' : '● ONLINE · ' }GESTÃO DE OBRAS · {produtos.length} PRODUTOS{!supabaseConfigured ? ' · MODO LOCAL' : usuario ? (cloudReady ? (authErro ? ' · NUVEM COM AVISO' : ' · NUVEM SINCRONIZADA') : ' · SINCRONIZANDO') : ' · MODO LOCAL · CONTA OPCIONAL'}</div></div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button aria-label={temaEscuro ? 'Ativar tema claro' : 'Ativar tema escuro'} title={temaEscuro ? 'Tema claro' : 'Tema escuro'} onClick={() => setTemaEscuro(!temaEscuro)} style={{ border: `1px solid ${border}`, width: 42, height: 42, borderRadius: 12, background: temaEscuro ? '#1e293b' : '#f8fafc', color: text, cursor: 'pointer', fontSize: 19 }}>{<Icon name={temaEscuro ? 'sun' : 'moon'} size={19} />}</button>
