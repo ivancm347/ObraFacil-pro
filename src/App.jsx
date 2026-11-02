@@ -227,6 +227,15 @@ export default function App() {
     }
   }
 
+  const chaveBaseNuvem = userId => `obrafacil_base_nuvem_${userId}`
+  const serializarDados = dados => JSON.stringify({
+    produtos: dados?.produtos || [],
+    clientes: dados?.clientes || [],
+    orcamentos: dados?.orcamentos || [],
+    obras: dados?.obras || [],
+    empresa: dados?.empresa || {}
+  })
+
   const dadosIniciais = () => ({
     produtos: SEED,
     clientes: [],
@@ -318,7 +327,7 @@ export default function App() {
     const carregar = async () => {
       const { data, error } = await supabase
         .from('obrafacil_dados')
-        .select('payload')
+        .select('payload, updated_at')
         .eq('user_id', usuario.id)
         .maybeSingle()
 
@@ -333,6 +342,7 @@ export default function App() {
 
       if (data?.payload && typeof data.payload === 'object') {
         aplicarDados(data.payload)
+        try { localStorage.setItem(chaveBaseNuvem(usuario.id), serializarDados(data.payload)) } catch {}
       } else {
         // Conta sem registro na nuvem: inicia com cache próprio ou dados limpos, nunca com o cache global.
         const locais = lerLocalUsuario(usuario.id) || dadosIniciais()
@@ -348,6 +358,7 @@ export default function App() {
           setDadosCarregados(true)
           return
         }
+        try { localStorage.setItem(chaveBaseNuvem(usuario.id), serializarDados(locais)) } catch {}
       }
 
       if (!ativo) return
@@ -385,6 +396,53 @@ export default function App() {
       console.error('Não foi possível salvar os dados locais', e)
     }
   }, [produtos, clientes, orcamentos, obras, empresa, dadosCarregados, usuario])
+
+  // Ao voltar a conexão, só envia alterações locais se a versão remota continuar
+  // igual à última versão conhecida neste aparelho. Se mudou, preserva ambos e sinaliza conflito.
+  useEffect(() => {
+    if (!supabaseConfigured || !usuario || !dadosCarregados || cloudReady || !estaOnline || tentativaSync === 0) return
+    let ativo = true
+    const sincronizarPendencias = async () => {
+      const chaveBase = chaveBaseNuvem(usuario.id)
+      const baseConhecida = localStorage.getItem(chaveBase)
+      if (!baseConhecida) {
+        setAuthErro('Há dados locais que ainda não foram sincronizados. Para evitar perda de informações, abra este aparelho online e confira os dados antes de tentar sincronizar.')
+        return
+      }
+      const { data, error } = await supabase.from('obrafacil_dados')
+        .select('payload')
+        .eq('user_id', usuario.id)
+        .maybeSingle()
+      if (!ativo) return
+      if (error) {
+        setAuthErro('Não foi possível conferir a versão da nuvem. Seus dados continuam salvos neste aparelho.')
+        return
+      }
+      const remotoAtual = data?.payload && typeof data.payload === 'object' ? serializarDados(data.payload) : null
+      if (remotoAtual !== baseConhecida) {
+        setAuthErro('Atenção: os dados da nuvem mudaram desde a última sincronização. As alterações locais foram preservadas e não foram enviadas para evitar sobrescrever informações.')
+        return
+      }
+      const payloadLocal = { produtos, clientes, orcamentos, obras, empresa }
+      const { error: gravacaoErro } = await supabase.from('obrafacil_dados').upsert({
+        user_id: usuario.id,
+        payload: payloadLocal,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' })
+      if (!ativo) return
+      if (gravacaoErro) {
+        setAuthErro('A sincronização ainda não foi concluída. Seus dados continuam salvos neste aparelho.')
+        return
+      }
+      localStorage.setItem(chaveBase, serializarDados(payloadLocal))
+      setCloudReady(true)
+      setAuthErro('')
+    }
+    sincronizarPendencias().catch(() => {
+      if (ativo) setAuthErro('Falha ao sincronizar. Seus dados locais foram preservados.')
+    })
+    return () => { ativo = false }
+  }, [supabaseConfigured, usuario, dadosCarregados, cloudReady, estaOnline, tentativaSync])
 
   useEffect(() => {
     if (!supabaseConfigured || !usuario || !cloudReady || !dadosCarregados) return
