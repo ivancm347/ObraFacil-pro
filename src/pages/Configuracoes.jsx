@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 
-export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro = false, isAdmin = false, clientes = [], orcamentos = [], obras = [], exportarBackupLocal }) {
+export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro = false, isAdmin = false, clientes = [], orcamentos = [], obras = [], exportarBackupLocal, mesclarDadosComNuvem, carregarNuvemNesteAparelho }) {
   const arquivoRef = useRef(null)
   const [form, setForm] = useState(() => ({
     nome: empresa.nome || '',
@@ -82,6 +82,11 @@ export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mo
               <p style={{ color: secundaria, fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>Exporte os dados que estão carregados neste aparelho. Faça isso separadamente no celular e no computador. O arquivo não envia nem altera nada na nuvem.</p>
               <p style={{ color: secundaria, fontSize: 12, marginTop: 8 }}>Produtos: {produtos.length} · Clientes: {clientes.length} · Orçamentos: {orcamentos.length} · Obras: {obras.length}</p>
               <button type="button" onClick={exportarBackupLocal} style={{ marginTop: 10, border: 0, borderRadius: 10, background: '#F05A28', color: '#fff', padding: '11px 15px', fontWeight: 800, cursor: 'pointer' }}>Baixar backup deste aparelho</button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                <button type="button" onClick={() => { if (window.confirm('Mesclar os dados deste aparelho com os dados atuais da nuvem? Os registros dos dois lados serão preservados e uma cópia de segurança será guardada neste aparelho.')) mesclarDadosComNuvem?.() }} style={{ border: 0, borderRadius: 10, background: '#0f766e', color: '#fff', padding: '11px 15px', fontWeight: 800, cursor: 'pointer' }}>Mesclar dados deste aparelho com a nuvem</button>
+                <button type="button" onClick={() => { if (window.confirm('Carregar neste aparelho a versão consolidada que está na nuvem? Os dados locais atuais serão guardados em uma cópia de segurança antes da troca.')) carregarNuvemNesteAparelho?.() }} style={{ border: `1px solid ${linha}`, borderRadius: 10, background: 'transparent', color: cor, padding: '11px 15px', fontWeight: 700, cursor: 'pointer' }}>Carregar dados consolidados da nuvem</button>
+              </div>
+              <p style={{ color: secundaria, fontSize: 12, lineHeight: 1.5, marginTop: 8 }}>Primeiro mescle no aparelho que contém dados exclusivos. Depois, no outro aparelho, carregue a versão consolidada da nuvem. Não limpe os dados locais.</p>
             </div>
             <button type="button" onClick={sairDaConta} style={{ marginTop: 12, border: `1px solid ${linha}`, borderRadius: 10, background: 'transparent', color: cor, padding: '11px 15px', fontWeight: 700, cursor: 'pointer' }}>Desconectar conta</button>
           </> : <form onSubmit={entrarOuCadastrar} style={{ marginTop: 14 }}>
