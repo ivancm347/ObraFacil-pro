@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 
-export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro = false, isAdmin = false }) {
+export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos = [], supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro = false, isAdmin = false, clientes = [], orcamentos = [], obras = [], exportarBackupLocal }) {
   const arquivoRef = useRef(null)
   const [form, setForm] = useState(() => ({
     nome: empresa.nome || '',
@@ -77,6 +77,12 @@ export default function Configuracoes({ empresa = {}, setEmpresa, temaEscuro, mo
           <p style={{ color: secundaria, fontSize: 13, marginTop: 4 }}>O aplicativo abre sem senha. Entre aqui somente se quiser sincronizar seus dados com a nuvem.</p>
           {usuario ? <>
             <p style={{ marginTop: 14, fontSize: 14 }}>Conta conectada: <strong>{usuario.email || 'Conta conectada'}</strong></p>
+            <div style={{ marginTop: 14, padding: 14, borderRadius: 12, border: `1px solid ${linha}`, background: temaEscuro ? '#111c2e' : '#f8fafc' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800 }}>Cópia de segurança deste aparelho</h3>
+              <p style={{ color: secundaria, fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>Exporte os dados que estão carregados neste aparelho. Faça isso separadamente no celular e no computador. O arquivo não envia nem altera nada na nuvem.</p>
+              <p style={{ color: secundaria, fontSize: 12, marginTop: 8 }}>Produtos: {produtos.length} · Clientes: {clientes.length} · Orçamentos: {orcamentos.length} · Obras: {obras.length}</p>
+              <button type="button" onClick={exportarBackupLocal} style={{ marginTop: 10, border: 0, borderRadius: 10, background: '#F05A28', color: '#fff', padding: '11px 15px', fontWeight: 800, cursor: 'pointer' }}>Baixar backup deste aparelho</button>
+            </div>
             <button type="button" onClick={sairDaConta} style={{ marginTop: 12, border: `1px solid ${linha}`, borderRadius: 10, background: 'transparent', color: cor, padding: '11px 15px', fontWeight: 700, cursor: 'pointer' }}>Desconectar conta</button>
           </> : <form onSubmit={entrarOuCadastrar} style={{ marginTop: 14 }}>
             <label style={label}>E-mail
