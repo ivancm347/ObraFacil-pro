@@ -19,7 +19,8 @@ create table if not exists public.ofertas (
   updated_at timestamptz not null default now()
 );
 
--- Completa colunas ausentes sem remover dados.\nalter table public.ofertas add column if not exists link_video text;
+-- Completa colunas ausentes sem remover dados.
+alter table public.ofertas add column if not exists link_video text;
 alter table public.ofertas add column if not exists nome text;
 alter table public.ofertas add column if not exists preco numeric(10,2);
 alter table public.ofertas add column if not exists preco_antigo numeric(10,2);

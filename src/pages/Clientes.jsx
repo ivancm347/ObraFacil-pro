@@ -4,7 +4,7 @@ import Icon from '../components/Icon.jsx'
 export default function Clientes({ clientes, setClientes, mostrarNotificacao, temaEscuro, cardBg, border }) {
   const [modoModal, setModoModal] = useState(null)
   const [busca, setBusca] = useState('')
-  const normalizarBusca = valor => String(valor || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim()
+  const normalizarBusca = valor => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
   const clientesFiltrados = clientes.filter(c => {
     const termo = normalizarBusca(busca)
     const campos = [c.nome, c.telefone, c.endereco, c.email].map(normalizarBusca)
@@ -144,7 +144,7 @@ export default function Clientes({ clientes, setClientes, mostrarNotificacao, te
                   <button
                     type="button"
                     onClick={() => {
-                      const numero = String(cliente.telefone).replace(/\\D/g, '')
+                      const numero = String(cliente.telefone).replace(/\D/g, '')
                       if (numero.length < 10) { mostrarNotificacao('Confira o telefone cadastrado antes de abrir o WhatsApp.'); return }
                       const numeroBR = numero.startsWith('55') ? numero : '55' + numero
                       window.open('https://wa.me/' + numeroBR, '_blank', 'noopener,noreferrer')
