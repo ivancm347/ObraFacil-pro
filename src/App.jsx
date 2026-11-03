@@ -521,6 +521,77 @@ export default function App() {
     if (error) setAuthErro('Não foi possível sair da conta. Tente novamente.')
   }
 
+  const mesclarDadosComNuvem = async () => {
+    if (!usuario || !supabaseConfigured || !navigator.onLine || !dadosCarregados) {
+      mostrarNotificacao('Entre na conta e conecte este aparelho à internet antes de mesclar.')
+      return
+    }
+    try {
+      const chaveLocal = `obrafacil_dados_usuario_${usuario.id}`
+      const chaveBase = chaveBaseNuvem(usuario.id)
+      const local = lerLocalUsuario(usuario.id) || { produtos, clientes, orcamentos, obras, empresa }
+      const { data: remotoInicial, error: erroLeitura } = await supabase.from('obrafacil_dados').select('payload').eq('user_id', usuario.id).maybeSingle()
+      if (erroLeitura) throw erroLeitura
+      const remoto = remotoInicial?.payload && typeof remotoInicial.payload === 'object' ? remotoInicial.payload : {}
+      const combinar = (a = [], b = []) => {
+        const mapa = new Map()
+        const chave = item => item?.id != null ? `id:${item.id}` : `json:${JSON.stringify(item)}`
+        ;[...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].forEach(item => {
+          if (item && typeof item === 'object') mapa.set(chave(item), item)
+        })
+        return [...mapa.values()]
+      }
+      const mesclado = {
+        produtos: combinar(remoto.produtos, local.produtos),
+        clientes: combinar(remoto.clientes, local.clientes),
+        orcamentos: combinar(remoto.orcamentos, local.orcamentos),
+        obras: combinar(remoto.obras, local.obras),
+        empresa: local.empresa && Object.keys(local.empresa).length ? local.empresa : (remoto.empresa || {})
+      }
+      localStorage.setItem(`obrafacil_backup_pre_mescla_local_${usuario.id}`, JSON.stringify({ data: local, salvo_em: new Date().toISOString() }))
+      localStorage.setItem(`obrafacil_backup_pre_mescla_nuvem_${usuario.id}`, JSON.stringify({ data: remoto, salvo_em: new Date().toISOString() }))
+      const { data: remotoAtual, error: erroConferencia } = await supabase.from('obrafacil_dados').select('payload').eq('user_id', usuario.id).maybeSingle()
+      if (erroConferencia) throw erroConferencia
+      if (serializarDados(remotoAtual?.payload || {}) !== serializarDados(remoto)) {
+        throw new Error('A nuvem mudou durante a mesclagem. Nada foi enviado; tente novamente.')
+      }
+      const { error: erroGravacao } = await supabase.from('obrafacil_dados').upsert({ user_id: usuario.id, payload: mesclado, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+      if (erroGravacao) throw erroGravacao
+      localStorage.setItem(chaveLocal, JSON.stringify(mesclado))
+      localStorage.setItem(chaveBase, serializarDados(mesclado))
+      aplicarDados(mesclado)
+      setCloudReady(true)
+      setAuthErro('')
+      mostrarNotificacao('Mesclagem concluída. Os dados locais e da nuvem foram reunidos.')
+    } catch (erro) {
+      console.error('Falha ao mesclar dados', erro)
+      setAuthErro(erro?.message || 'Não foi possível mesclar. Os dados deste aparelho foram preservados.')
+    }
+  }
+
+  const carregarNuvemNesteAparelho = async () => {
+    if (!usuario || !supabaseConfigured || !navigator.onLine || !dadosCarregados) {
+      mostrarNotificacao('Entre na conta e conecte este aparelho à internet.')
+      return
+    }
+    try {
+      const { data, error } = await supabase.from('obrafacil_dados').select('payload').eq('user_id', usuario.id).maybeSingle()
+      if (error) throw error
+      if (!data?.payload) throw new Error('Ainda não há dados consolidados na nuvem.')
+      const chaveLocal = `obrafacil_dados_usuario_${usuario.id}`
+      const localAtual = lerLocalUsuario(usuario.id)
+      if (localAtual) localStorage.setItem(`obrafacil_backup_antes_de_carregar_nuvem_${usuario.id}`, JSON.stringify({ data: localAtual, salvo_em: new Date().toISOString() }))
+      localStorage.setItem(chaveLocal, JSON.stringify(data.payload))
+      localStorage.setItem(chaveBaseNuvem(usuario.id), serializarDados(data.payload))
+      aplicarDados(data.payload)
+      setCloudReady(true)
+      setAuthErro('')
+      mostrarNotificacao('Dados consolidados carregados neste aparelho.')
+    } catch (erro) {
+      setAuthErro(erro?.message || 'Não foi possível carregar os dados da nuvem. O conteúdo local foi preservado.')
+    }
+  }
+
   const exportarBackupLocal = () => {
     try {
       const payload = { produtos, clientes, orcamentos, obras, empresa }
@@ -598,7 +669,7 @@ export default function App() {
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
         {pagina === 'ofertas' && isAdmin && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'gerenciar-clientes' && isAdmin && <GerenciarClientes {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
-        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, clientes, orcamentos, obras, exportarBackupLocal, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro, isAdmin } } />}
+        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, clientes, orcamentos, obras, exportarBackupLocal, mesclarDadosComNuvem, carregarNuvemNesteAparelho, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro, isAdmin } } />}
       </main>
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `2px solid ${temaEscuro ? '#475569' : '#cbd5e1'}`, borderRadius: 18, display: 'flex', padding: 8, gap: 6, boxShadow: '0 10px 34px rgba(0,0,0,0.22)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
         <style>{` nav::-webkit-scrollbar { display: none; } @media (max-width: 400px) { nav button { padding: 10px 12px !important; font-size: 12px !important; } } `}</style>
