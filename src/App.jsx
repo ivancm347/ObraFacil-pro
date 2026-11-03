@@ -521,6 +521,40 @@ export default function App() {
     if (error) setAuthErro('Não foi possível sair da conta. Tente novamente.')
   }
 
+  const exportarBackupLocal = () => {
+    try {
+      const payload = { produtos, clientes, orcamentos, obras, empresa }
+      const backup = {
+        formato: 'obrafacil-pro-backup',
+        versao: 1,
+        origem: 'dados carregados neste aparelho',
+        exportado_em: new Date().toISOString(),
+        conta: usuario?.email || null,
+        user_id: usuario?.id || null,
+        quantidades: {
+          produtos: produtos.length,
+          clientes: clientes.length,
+          orcamentos: orcamentos.length,
+          obras: obras.length
+        },
+        dados: payload
+      }
+      const arquivo = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' })
+      const url = URL.createObjectURL(arquivo)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `obrafacil-backup-${usuario?.id ? usuario.id.slice(0, 8) : 'local'}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 1500)
+      mostrarNotificacao('Backup deste aparelho exportado. Guarde o arquivo em local seguro.')
+    } catch (erro) {
+      console.error('Falha ao exportar backup', erro)
+      mostrarNotificacao('Não foi possível gerar o backup neste aparelho.')
+    }
+  }
+
   const mostrarNotificacao = (msg) => { setNotificacao(msg); setTimeout(()=>setNotificacao(null), 3000) }
   const formatarMoeda = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   const bg = temaEscuro ? '#0b1220' : '#f6f7fb'
@@ -564,7 +598,7 @@ export default function App() {
         {pagina === 'assistente' && <AssistenteInteligente {...{ produtos, clientes, orcamentos, obras, temaEscuro, setPagina } } />}
         {pagina === 'ofertas' && isAdmin && <OfertasAfiliadas {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
         {pagina === 'gerenciar-clientes' && isAdmin && <GerenciarClientes {...{ temaEscuro, cardBg, border, mostrarNotificacao } } />}
-        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro, isAdmin } } />}
+        {pagina === 'configuracoes' && <Configuracoes {...{ empresa, setEmpresa, temaEscuro, mostrarNotificacao, cardBg, border, produtos, clientes, orcamentos, obras, exportarBackupLocal, supabaseConfigured, usuario, email, setEmail, senha, setSenha, modoAuth, setModoAuth, authErro, setAuthErro, authMensagem, entrarOuCadastrar, sairDaConta, acessoPro, isAdmin } } />}
       </main>
             <nav style={{ position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100vw - 16px)', background: cardBg, border: `2px solid ${temaEscuro ? '#475569' : '#cbd5e1'}`, borderRadius: 18, display: 'flex', padding: 8, gap: 6, boxShadow: '0 10px 34px rgba(0,0,0,0.22)', zIndex: 999, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
         <style>{` nav::-webkit-scrollbar { display: none; } @media (max-width: 400px) { nav button { padding: 10px 12px !important; font-size: 12px !important; } } `}</style>
